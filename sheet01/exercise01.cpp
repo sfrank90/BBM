@@ -39,6 +39,14 @@ int main(int argc, char *argv[]) {
 	 * Erweitere die gegebene Programmgrundstruktur so, dass
 	 * - ein Bild geladen werden kann.
 	 */
+	Mat image;
+    image = imread(argv[1], CV_LOAD_IMAGE_COLOR);   // Read the file
+
+    if(! image.data )                              
+    {
+        cout <<  "Could not open or find the image" << std::endl ;
+        return -1;
+    }
 
 /* TODO */
 
@@ -46,6 +54,11 @@ int main(int argc, char *argv[]) {
 	/**
 	 * - die Höhe, Breite, Anzahl der Farbkanäle dieses Bildes ausgegeben wird.
 	 */
+	int width = image.rows;
+	int height = image.cols;
+	int channels = image.channels();;
+	std::cout << "Image Attributes - width: " << width << ", height: " << height 
+			<< ", number of channels: " << channels << std::endl;
 
 /* TODO */
 
@@ -53,6 +66,10 @@ int main(int argc, char *argv[]) {
 	/**
 	 * - dieses Bild in einem \code{cvNamedWindow} angezeigt wird, bis eine Tastatureingabe erfolgt.
 	 */
+	namedWindow( "Display window", WINDOW_AUTOSIZE );
+    imshow( "Display window", image );                   // show original image
+
+    waitKey(0);
 
 /* TODO */
 
@@ -60,6 +77,22 @@ int main(int argc, char *argv[]) {
 	/**
 	 * - die drei Farbkanäle des Bildes nebeneinander angezeigt werden.
 	 */
+	Mat blue, green, red;
+	// "channels" is a vector of 3 Mat arrays:
+	vector<Mat> channels(3);
+	// split img:
+	split(image, channels);
+	// get the channels (BGR)
+	blue = channels[0];
+	green = channels[1];
+	red = channels[2];
+	
+	namedWindow( "Blue Channel", WINDOW_AUTOSIZE );
+    imshow( "Blue Channel", blue );                   
+	namedWindow( "Green Channel", WINDOW_AUTOSIZE );
+    imshow( "Green Channel", green );                  
+	namedWindow( "Red Channel", WINDOW_AUTOSIZE );
+    imshow( "Red Channel", red );                   
 
 /* TODO */
 
@@ -67,6 +100,16 @@ int main(int argc, char *argv[]) {
 	/**
 	 * - das Bild zusammen mit einem roten $10 \times 10$ Rechteck um die Bildmitte angezeigt wird.
 	 */
+	 
+	Point center = Point( width / 2, height / 2 );
+	rectangle( image, 
+               cvPoint(center.x-5,center.y-5),
+               cvPoint(center.x+5,center.y+5),
+               CV_RGB(255,0,0), 1, 8
+             );
+	namedWindow( "Rectangle Window", WINDOW_AUTOSIZE );
+    imshow( "Rectangle Window", image );  
+	waitKey(0);
 
 /* TODO */
 

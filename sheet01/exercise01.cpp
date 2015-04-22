@@ -136,13 +136,24 @@ int main(int argc, char *argv[]) {
 	 * - die Funktion $L$ mit Taylorentwicklung 2. Ordnung approximiert wird,
 	 *   wobei das Verzerrungszentrum der Bildmitte entspricht.
 	 */
-
+	Mat undistorted_image(image.size(), image.type());
+	for ( int x = 0; x < image.rows; x ++) {
+		for (int y = 0; y < image.cols; y++) {
+			double r = sqrt((pow(x - center.x),2) + pow(y - center.y, 2));
+			double l_r = 1 + argv[3]*r + argv[4]*pow(r,2) + argv[5]*pow(r,3);
+			int x_new = center.x + l_r*(x-center.x);
+			int y_new = center.y + l_r*(y-center.y);
+			Vec3b color = image.at<Vec3b>(Point(x,y)); //pixel color from distorted image
+			undistorted_image.at<Vec3b>(Point(x_new,y_new)) = color;
+		}
+	}
 /* TODO */
 
 
 	/**
 	 * - das entzerrte Bild in einer Datei gespeichert wird. 
 	 */
+	imwrite("./"+argv[2], undistorted_image);
 
 /* TODO */
 

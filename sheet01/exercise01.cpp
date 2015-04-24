@@ -41,15 +41,15 @@ int main(int argc, char *argv[]) {
 	 * - ein Bild geladen werden kann.
 	 */
 	cv::Mat image;
-    image = cv::imread(argv[1], CV_LOAD_IMAGE_COLOR);   // Read the file
+	image = cv::imread(argv[1], CV_LOAD_IMAGE_COLOR);   // Read the file
 
-    if(! image.data )                              
-    {
-        std::cout <<  "Could not open or find the image" << std::endl ;
-        return -1;
-    }
+	if(! image.data )                              
+	{
+		std::cout <<  "Could not open or find the image" << std::endl ;
+		return -1;
+	}
 
-/* TODO */
+	/* TODO */
 
 
 	/**
@@ -59,20 +59,21 @@ int main(int argc, char *argv[]) {
 	int height = image.rows;
 	int channels = image.channels();;
 	std::cout << "Image Attributes - width: " << width << ", height: " << height 
-			<< ", number of channels: " << channels << std::endl;
+		  << ", number of channels: " << channels << std::endl;
 
-/* TODO */
+	/* TODO */
 
 
 	/**
 	 * - dieses Bild in einem \code{cvNamedWindow} angezeigt wird, bis eine Tastatureingabe erfolgt.
 	 */
 	cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );
-    cv::imshow( "Display window", image );                   // show original image
+	cv::moveWindow( "Display window", 100, 100);
+	cv::imshow( "Display window", image );                   // show original image
 
-    cv::waitKey(0);
+	cv::waitKey(0);
 
-/* TODO */
+	/* TODO */
 
 
 	/**
@@ -89,31 +90,35 @@ int main(int argc, char *argv[]) {
 	red = channels_vector[2];
 	
 	cv::namedWindow( "Blue Channel", cv::WINDOW_AUTOSIZE );
-    cv::imshow( "Blue Channel", blue );                   
+	cv::moveWindow( "Blue Channel", 100, 100);
+	cv::imshow( "Blue Channel", blue );                   
 	cv::namedWindow( "Green Channel", cv::WINDOW_AUTOSIZE );
-    cv::imshow( "Green Channel", green );                  
+	cv::moveWindow( "Green Channel", 100, 100);
+	cv::imshow( "Green Channel", green );                  
 	cv::namedWindow( "Red Channel", cv::WINDOW_AUTOSIZE );
-    cv::imshow( "Red Channel", red );                   
-
-/* TODO */
+	cv::moveWindow( "Red Channel", 100, 100);
+	cv::imshow( "Red Channel", red );                   
+	cv::waitKey(0);
+	/* TODO */
 
 
 	/**
 	 * - das Bild zusammen mit einem roten $10 \times 10$ Rechteck um die Bildmitte angezeigt wird.
 	 */
-	 
+	cv::Mat cloned = image.clone();
 	cv::Point center = cv::Point( width / 2, height / 2 );
-	cv::rectangle( image, 
+	cv::rectangle( cloned, 
                cvPoint(center.x-5,center.y-5),
                cvPoint(center.x+5,center.y+5),
                CV_RGB(255,0,0), 1, 8
              );
-	std::cout << center.x << " " << center.y << std::endl;
+	//std::cout << center.x << " " << center.y << std::endl;
 	cv::namedWindow( "Rectangle Window", cv::WINDOW_AUTOSIZE );
-    cv::imshow( "Rectangle Window", image );  
+	cv::moveWindow( "Rectangle Window", 100, 100);
+	cv::imshow( "Rectangle Window", cloned );  
 	cv::waitKey(0);
 
-/* TODO */
+	/* TODO */
 
 
 	/**
@@ -144,8 +149,8 @@ int main(int argc, char *argv[]) {
 	double kappa1, kappa2;
 	sstr >> kappa1 >> kappa2;
 
-	std::cout << kappa1 << std::endl;
-	std::cout << kappa2 << std::endl;
+	//std::cout << kappa1 << std::endl;
+	//std::cout << kappa2 << std::endl;
 
 	cv::Mat undistorted_image(image.size(), image.type());
 	for ( int x = 0; x < image.cols; x++) {
@@ -160,15 +165,17 @@ int main(int argc, char *argv[]) {
 			undistorted_image.at<cv::Vec3b>(cv::Point(x_new,y_new)) = color;
 		}
 	}
-/* TODO */
-
-
+	/* TODO */
+	cv::namedWindow( "Deskewed", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Deskewed", 100, 100);	
+	cv::imshow( "Deskewed", undistorted_image );  
+	cv::waitKey(0);
 	/**
 	 * - das entzerrte Bild in einer Datei gespeichert wird. 
 	 */
 	cv::imwrite("./"+std::string(argv[2]), undistorted_image);
 
-/* TODO */
+	/* TODO */
 
 
 	/**

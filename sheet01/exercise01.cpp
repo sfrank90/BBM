@@ -156,12 +156,12 @@ int main(int argc, char *argv[]) {
 		for (int y = 0; y < image.rows; y++) {
 			double r = sqrt(pow(x - center.x,2) + pow(y - center.y, 2));
 			double l_r = 1 + kappa1*r + kappa2*pow(r,2)/* + argv[5]*pow(r,3)*/; //nur 2. Ordnung...
-			int x_new = center.x + l_r*(x-center.x);
-			int y_new = center.y + l_r*(y-center.y);
+			int x_new = center.x + (x-center.x) / l_r;
+			int y_new = center.y + (y-center.y) / l_r;
 			if (x_new < 0 || y_new < 0 || x_new >= image.cols || y_new >= image.rows)
 				continue;
-			cv::Vec3b color = image.at<cv::Vec3b>(cv::Point(x,y)); //pixel color from distorted image
-			undistorted_image.at<cv::Vec3b>(cv::Point(x_new,y_new)) = color;
+			cv::Vec3b color = image.at<cv::Vec3b>(cv::Point(x_new,y_new)); //pixel color from distorted image
+			undistorted_image.at<cv::Vec3b>(cv::Point(x,y)) = color;
 		}
 	}
 	/* TODO */

@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <iostream>
 #include <cmath>
 #include <cv.h>
 #include <highgui.h>
@@ -188,5 +189,6 @@ int main(int argc, char *argv[]) {
 	 * \label{fig:distorted}
 	 * \end{figure}
 	 */
+	std::cin.get();
 }
 

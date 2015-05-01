@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
 	IplImage *gray = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
 /* TODO */
+	cvConvertScale(image, imageFloat, 1.0 / 255.0);
+	cvCvtColor(imageFloat, gray, CV_BGR2GRAY);
 
 	cvNamedWindow("Grayscale"); 
 	cvShowImage("Grayscale", gray);
@@ -56,6 +58,11 @@ int main(int argc, char **argv) {
 	IplImage *sgauss = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
 /* TODO */
+	int kernel_size = 201;
+	float sigma_s = 2;
+	float sigma_l = 20;
+	cvSmooth(gray, sgauss, CV_GAUSSIAN, kernel_size, kernel_size, sigma_s);
+	cvSmooth(gray, lgauss, CV_GAUSSIAN, kernel_size, kernel_size, sigma_l);
 
 	cvNamedWindow("Large Gaussian"); 
 	cvShowImage("Large Gaussian", lgauss);
@@ -70,6 +77,7 @@ int main(int argc, char **argv) {
 	IplImage *dog = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
 /* TODO */
+	cvAbsDiff(lgauss, sgauss, dog);
 
 	cvNamedWindow("Difference of Gaussians"); 
 	cvShowImage("Difference of Gaussians", dog);

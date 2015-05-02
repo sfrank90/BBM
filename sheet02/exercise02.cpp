@@ -105,7 +105,11 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
-
+	float kernel[] = { -10.0, 0, 10.0 };
+	CvMat *filterDx = cvCreateMatHeader(1, 3, CV_32FC1);
+	CvMat *filterDy = cvCreateMatHeader(3, 1, CV_32FC1);
+	cvSetData(filterDx, kernel, filterDx->step);
+	cvSetData(filterDy, kernel, filterDy->step);
 
 	/**
 	 * - Implementiere diskretes Differenzieren als Faltung mit diesem Kern und
@@ -116,6 +120,8 @@ int main(int argc, char **argv) {
 	IplImage *dy = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
 /* TODO */
+	cvFilter2D(gray, dx, filterDx);
+	cvFilter2D(gray, dy, filterDy);
 
 	cvNamedWindow("DX"); 
 	cvShowImage("DX", dx);
@@ -131,6 +137,7 @@ int main(int argc, char **argv) {
 	IplImage *sobel = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
 /* TODO */
+	cvSobel(gray, sobel, 1, 0);
 
 	cvNamedWindow("sobel"); 
 	cvShowImage("sobel", sobel);
@@ -148,6 +155,9 @@ int main(int argc, char **argv) {
 	IplImage* gradient = cvCreateImage(size, IPL_DEPTH_32F, 1);
 
 /* TODO */
+	cvMul(dx, dx, dx);
+	cvMul(dy, dy, dy);
+	cvAdd(dx, dy, gradient);
 
 	cvShowImage("Gradient", gradient);
 	cvWaitKey(0);
@@ -156,6 +166,9 @@ int main(int argc, char **argv) {
 	IplImage* edge2 = cvCreateImage(size, IPL_DEPTH_8U, 1);
 
 /* TODO */
+	int t1 = 1, t2 = 10;
+	cvCmpS(gradient, t1, edge1, CV_CMP_GT);
+	cvCmpS(gradient, t2, edge2, CV_CMP_GT);
 
 	cvShowImage("All edges", edge1);
 	cvWaitKey(0);
@@ -169,6 +182,9 @@ int main(int argc, char **argv) {
 	IplImage* edge = cvCreateImage(size, IPL_DEPTH_8U, 1);
 
 /* TODO */
+	IplImage* gray_u8 = cvCreateImage(size, IPL_DEPTH_8U, 1);
+	cvCvtColor(image, gray_u8, CV_BGR2GRAY);
+	cvCanny(gray_u8, edge, t1, t2, 3);
 
 	cvShowImage("Canny", edge);
 	cvWaitKey(0);

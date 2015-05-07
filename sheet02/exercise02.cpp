@@ -51,9 +51,9 @@ int main(int argc, char **argv) {
 	cvConvertScale(image, imageFloat, 1.0 / 255.0);
 	cvCvtColor(imageFloat, gray, CV_BGR2GRAY);
 
-	//cvNamedWindow("Grayscale"); 
-	//cvShowImage("Grayscale", gray);
-	//cvWaitKey(0); 
+	cvNamedWindow("Grayscale"); 
+	cvShowImage("Grayscale", gray);
+	cvWaitKey(0); 
 
 	/**
 	 * - Falte ein verrauschtes Testbild mit Gaußfunktionen verschiedener
@@ -69,11 +69,11 @@ int main(int argc, char **argv) {
 	cvSmooth(gray, sgauss, CV_GAUSSIAN, kernel_size, kernel_size, sigma_s);
 	cvSmooth(gray, lgauss, CV_GAUSSIAN, kernel_size, kernel_size, sigma_l);
 
-	//cvNamedWindow("Large Gaussian"); 
-	//cvShowImage("Large Gaussian", lgauss);
-	//cvNamedWindow("Small Gaussian"); 
-	//cvShowImage("Small Gaussian", sgauss);
-	//cvWaitKey(0); 
+	cvNamedWindow("Large Gaussian"); 
+	cvShowImage("Large Gaussian", lgauss);
+	cvNamedWindow("Small Gaussian"); 
+	cvShowImage("Small Gaussian", sgauss);
+	cvWaitKey(0); 
 
 	/**
 	 * - Betrachte die Differenzen zweier gaußgefilterter Bilder (evt.
@@ -84,9 +84,9 @@ int main(int argc, char **argv) {
 /* TODO */
 	cvAbsDiff(lgauss, sgauss, dog);
 
-/*	cvNamedWindow("Difference of Gaussians"); 
+	cvNamedWindow("Difference of Gaussians"); 
 	cvShowImage("Difference of Gaussians", dog);
-	cvWaitKey(0);*/ 
+	cvWaitKey(0); 
 
 	/**
 	 * Aufgabe: Diskrete Ableitungen (5 Punkte)
@@ -128,11 +128,11 @@ int main(int argc, char **argv) {
 	cvFilter2D(gray, dx, filterDx);
 	cvFilter2D(gray, dy, filterDy);
 
-	//cvNamedWindow("DX"); 
-	//cvShowImage("DX", dx);
-	//cvNamedWindow("DY"); 
-	//cvShowImage("DY", dy);
-	//cvWaitKey(0); 
+	cvNamedWindow("DX"); 
+	cvShowImage("DX", dx);
+	cvNamedWindow("DY"); 
+	cvShowImage("DY", dy);
+	cvWaitKey(0); 
 
 	/**
 	 * - Verwende in der Implementierung nun Faltung mit dem Sobel-Operator
@@ -145,8 +145,8 @@ int main(int argc, char **argv) {
 	cvSobel(gray, sobel, 1, 0);
 
 	cvNamedWindow("sobel"); 
-	//cvShowImage("sobel", sobel);
-	//cvWaitKey(0);
+	cvShowImage("sobel", sobel);
+	cvWaitKey(0);
 
 	/**
 	 * Aufgabe: Features (10 Punkte)
@@ -167,8 +167,8 @@ int main(int argc, char **argv) {
 
 	cvAdd(dxx, dyy, gradient);
 
-	//cvShowImage("Gradient", gradient);
-	//cvWaitKey(0);
+	cvShowImage("Gradient", gradient);
+	cvWaitKey(0);
 
 	IplImage* edge1 = cvCreateImage(size, IPL_DEPTH_8U, 1);
 	IplImage* edge2 = cvCreateImage(size, IPL_DEPTH_8U, 1);
@@ -178,10 +178,10 @@ int main(int argc, char **argv) {
 	cvCmpS(gradient, t1, edge1, CV_CMP_GT);
 	cvCmpS(gradient, t2, edge2, CV_CMP_GT);
 
-	/*cvShowImage("All edges", edge1);
+	cvShowImage("All edges", edge1);
 	cvWaitKey(0);
 	cvShowImage("Only edges", edge2);
-	cvWaitKey(0);*/
+	cvWaitKey(0);
 
 	/*
 	 * - Vergleiche mit dem Ergebnis des Canny-Kantendetektors
@@ -194,8 +194,8 @@ int main(int argc, char **argv) {
 	cvCvtColor(image, gray_u8, CV_BGR2GRAY);
 	cvCanny(gray_u8, edge, t1, t2, 3);
 
-	//cvShowImage("Canny", edge);
-	//cvWaitKey(0);
+	cvShowImage("Canny", edge);
+	cvWaitKey(0);
 
 	/**
 	 * Einzelne herausragende Punkte werden auch als Featurepunkte oder Ecken
@@ -215,8 +215,8 @@ int main(int argc, char **argv) {
     IplImage* i_yy = cvCreateImage(size,IPL_DEPTH_32F,1);
     IplImage* i_xy = cvCreateImage(size,IPL_DEPTH_32F,1);
 	
-    cvSobel(gray_u8,dx,1,0,3);
-    cvSobel(gray_u8,dy,0,1,3);
+    cvSobel(gray,dx,1,0,3);
+    cvSobel(gray,dy,0,1,3);
 
     cvMul(dx,dx,i_xx,1);
     cvMul(dy,dy,i_yy,1);
@@ -227,35 +227,55 @@ int main(int argc, char **argv) {
 	cvSmooth(i_yy, i_yy, CV_BLUR, 3, 3);
 	cvSmooth(i_xy, i_xy, CV_BLUR, 3, 3);
 
-    double k = 0.04, omega = 0.1;
-    for(int x = 0; x < size.width; x++){
-        for(int y=0; y < size.height; y++){
-            CvMat* A = cvCreateMat(2,2,CV_32FC1);
-			
-			float d00 = CV_IMAGE_ELEM(i_xx, float, y, x); 
-			float d01 = CV_IMAGE_ELEM(i_xy, float, y, x); 
-			float d10 = CV_IMAGE_ELEM(i_xy, float, y, x); 
-			float d11 = CV_IMAGE_ELEM(i_yy, float, y, x); 
-            
-			cvSet2D(A,0,0,cvRealScalar(d00));
-            cvSet2D(A,0,1,cvRealScalar(d01));
-            cvSet2D(A,1,0,cvRealScalar(d10));
-            cvSet2D(A,1,1,cvRealScalar(d11));
+	double k = 0.04, omega = 0.1;
 
-            double R = cvDet(A)-k* (CV_MAT_ELEM((*A),float,0,0)+CV_MAT_ELEM((*A),float,1,1));
+	/*
+		Response function
+		R = det A − k(trace A)^2
+		So with OpenCv it should be: Ixx * Iyy - Ixy^2 - k*(Ixx+Iyy)^2
+	*/
+	CvMat* R = cvCreateMat(size.height,size.width,CV_32FC1);
+	cvMul(i_xx, i_yy, R);
+	cvMul(i_xy, i_xy, i_xy); //i_xy is now i_xy^2
+	cvSub(R, i_xy, R);
 
-            if(R>10000.0){
-				/*
-				missing test for local maximum...
-				therefore response function has probably to be outside of loop and calculated directly...
-				will do that later...
-				*/
-                harris_pts.push_back(cvPoint(x,y));
+	CvMat* trace = cvCreateMat(size.height,size.width,CV_32FC1);
+	cvAdd(i_xx, i_yy, trace);
+	cvMul(trace, trace, trace, k);
+
+    cvSub(R, trace, R);
+
+    for(int x = 1; x < size.width-1; x++){
+        for(int y=1; y < size.height-1; y++){
+
+            float r = CV_MAT_ELEM((*R),float,y,x);
+
+			// r < 0 -> Edge
+			// r > 0 -> Corner
+			// |r| small -> flat
+
+			/*
+			The Algorithm:
+				– Find points with large corner response
+				  function R (R > threshold)
+				– Take the points of local maxima of R
+			*/
+
+            if(r>omega){
+				bool localMaximum = true;
+				for(int u=-1; u<2; ++u) {
+					for(int v=-1; v<2; ++v) {
+						if(v==0 && u==0) continue;
+						localMaximum &= (r > CV_MAT_ELEM((*R),float,y+u,x+v));
+					}
+				}
+				if(localMaximum) {
+					harris_pts.push_back(cvPoint(x,y));
+				} 
             }
-
-			//std::cout << R << std::endl;
         }
     }
+
 	/**
 	 * - Zeichne ein $3\times3$ Rechteck um jede gefundene Harris-Corner.
 	 */

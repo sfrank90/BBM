@@ -24,7 +24,30 @@
  */
 
 /* TODO */
+void medianBlur(cv::Mat &src, cv::Mat &dst, int k = 3, int channel = 0) {
+	assert(src.channels() > channel);
+	//float or int? we do not know the underlying conversion, so just demand float for now
+	assert(src.depth() == CV_32F);
+	
+	dst = src.clone();
+	std::vector<float> values;
+	int dx = k/2;
+	int dy = k/2;
 
+	for(int y = dy; y < src.rows-dy; ++y) {
+		for(int x = dx; x < src.cols-dx; ++x) {
+			values.clear();
+
+			for(int wy = -dy; wy <= dy; ++wy) {
+				for(int wx = -dx; wx <= dx; ++wx) {
+					values.push_back(*(&(src.at<float>(y+wy,x+wx))+channel));
+				}
+			}
+			std::sort(values.begin(), values.end());
+			*(&(dst.at<float>(y,x))+channel) = values[values.size() / 2];
+		}
+	}
+}
 
 int main(int argc, char **argv) {
 	if (argc < 2) {

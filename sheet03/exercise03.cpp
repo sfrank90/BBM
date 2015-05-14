@@ -79,10 +79,9 @@ int main(int argc, char **argv) {
     cv::Mat img02(imageFloat);
 
     cv::Mat median = medianBlur(gray, 7);
-    IplImage medianImg = median;
 
 	cvNamedWindow("Median");
-	cvShowImage("Median", &medianImg);
+    cv::imshow("Median", median);
 	cvWaitKey(0);
 
 	cv::Mat blue, green, red;

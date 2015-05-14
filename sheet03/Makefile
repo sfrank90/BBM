@@ -1,5 +1,5 @@
 APP:=$(basename $(wildcard *.cpp))
-CXX:=g++ -Wall -O2 -I/usr/include/opencv
+CXX:=g++ -Wall -O2 -I/usr/include/opencv -g
 CXX_LIBS=-lglut -lGLU -lpthread -lopencv_highgui -lopencv_core -lopencv_legacy -lopencv_imgproc 
 
 .PHONY: all clean

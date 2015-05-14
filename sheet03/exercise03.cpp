@@ -24,12 +24,12 @@
  */
 
 /* TODO */
-void medianBlur(cv::Mat &src, cv::Mat &dst, int k = 3, int channel = 0) {
+cv::Mat medianBlur(const cv::Mat &src, int k = 3, int channel = 0) {
 	assert(src.channels() > channel);
 	//float or int? we do not know the underlying conversion, so just demand float for now
 	assert(src.depth() == CV_32F);
 	
-	dst = src.clone();
+    cv::Mat dst = src.clone();
 	std::vector<float> values;
 	int dx = k/2;
 	int dy = k/2;
@@ -47,6 +47,7 @@ void medianBlur(cv::Mat &src, cv::Mat &dst, int k = 3, int channel = 0) {
 			*(&(dst.at<float>(y,x))+channel) = values[values.size() / 2];
 		}
 	}
+    return dst;
 }
 
 int main(int argc, char **argv) {
@@ -58,11 +59,54 @@ int main(int argc, char **argv) {
 	// load the input image
 	IplImage *img = cvLoadImage(argv[1]);
 
+
+	CvSize size = cvGetSize(img);
+
 	/**
 	 * - Wende den Median-Filter auf ein Graustufenbild an.
 	 */
 
 /* TODO */
+	IplImage *gray = cvCreateImage(size, IPL_DEPTH_32F, 1);
+	IplImage *imageFloat = cvCreateImage(size, IPL_DEPTH_32F, img->nChannels);
+	cvConvertScale(img, imageFloat, 1.0 / 255.0);
+	cvCvtColor(imageFloat, gray, CV_BGR2GRAY);
+
+	cvNamedWindow("Gray");
+	cvShowImage("Gray", gray);
+	cvWaitKey(0);
+
+    cv::Mat img02(imageFloat);
+
+    cv::Mat median = medianBlur(gray, 7);
+    IplImage medianImg = median;
+
+	cvNamedWindow("Median");
+	cvShowImage("Median", &medianImg);
+	cvWaitKey(0);
+
+	cv::Mat blue, green, red;
+	// "channels" is a vector of 3 Mat arrays:
+	std::vector<cv::Mat> channels_vector(3);
+	// split img:
+	cv::split(img02, channels_vector);
+	// get the channels (BGR)
+	blue = medianBlur(channels_vector[0], 7);
+	green = medianBlur(channels_vector[1], 7);
+	red = medianBlur(channels_vector[2], 7);
+	
+	cv::namedWindow( "Median Blue", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Blue", 100, 100);
+	cv::imshow( "Median Blue", blue );                   
+	cv::waitKey(0);
+	cv::namedWindow( "Median Green", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Green", 100, 100);
+	cv::imshow( "Median Green", green );                  
+	cv::waitKey(0);
+	cv::namedWindow( "Median Red", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Red", 100, 100);
+	cv::imshow( "Median Red", red );                   
+	cv::waitKey(0);
 
 
 	/**

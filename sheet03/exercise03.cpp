@@ -50,6 +50,42 @@ cv::Mat medianBlur(const cv::Mat &src, int k = 3, int channel = 0) {
     return dst;
 }
 
+cv::Mat houghTransform(const cv::Mat &src, int thetaRes=512, int distRes=512) {
+    cv::Mat accumBuffer(thetaRes, distRes, CV_32F);
+    accumBuffer.setTo(0);
+
+    int xres = src.cols, yres = src.rows;
+    float maxDist = sqrt(pow(xres, 2) + pow(yres, 2));
+    float distScale = distRes / maxDist;
+
+    float maxValue = 0;
+    for (int y = 0; y < yres; ++y) {
+        for (int x = 0; x < xres; ++x) {
+            if (src.at<uchar>(y, x) == 255) {
+                for(int i = 0; i < thetaRes; ++i) {
+                    float theta = 2 * i * CV_PI / thetaRes;
+                    float dist = x * cos(theta) + y * sin(theta);
+                    dist *= distScale;
+                    if(dist > 0 && dist < maxDist) {
+                        int cx = i, cy = dist;
+                        accumBuffer.at<float>(cy, cx) += 1;
+                        maxValue = std::max(accumBuffer.at<float>(cy, cx), maxValue);
+                    }
+                }
+            }
+        }
+    }
+
+    //normalize accumBuffer
+    for (int y = 0; y < accumBuffer.rows; ++y) {
+        for (int x = 0; x < accumBuffer.cols; ++x) {
+            if(maxValue > 0)
+                accumBuffer.at<float>(y, x) /= maxValue;
+        }
+    }
+    return accumBuffer;
+}
+
 int main(int argc, char **argv) {
 	if (argc < 2) {
 		std::cerr << "usage: " << argv[0] << " <image>" << std::endl;
@@ -78,34 +114,12 @@ int main(int argc, char **argv) {
 
     cv::Mat img02(imageFloat);
 
-    cv::Mat median = medianBlur(gray, 7);
+    int kernel_size = 3;
+    cv::Mat median = medianBlur(gray, kernel_size);
 
 	cvNamedWindow("Median");
     cv::imshow("Median", median);
 	cvWaitKey(0);
-
-	cv::Mat blue, green, red;
-	// "channels" is a vector of 3 Mat arrays:
-	std::vector<cv::Mat> channels_vector(3);
-	// split img:
-	cv::split(img02, channels_vector);
-	// get the channels (BGR)
-	blue = medianBlur(channels_vector[0], 7);
-	green = medianBlur(channels_vector[1], 7);
-	red = medianBlur(channels_vector[2], 7);
-	
-	cv::namedWindow( "Median Blue", cv::WINDOW_AUTOSIZE );
-	cv::moveWindow( "Median Blue", 100, 100);
-	cv::imshow( "Median Blue", blue );                   
-	cv::waitKey(0);
-	cv::namedWindow( "Median Green", cv::WINDOW_AUTOSIZE );
-	cv::moveWindow( "Median Green", 100, 100);
-	cv::imshow( "Median Green", green );                  
-	cv::waitKey(0);
-	cv::namedWindow( "Median Red", cv::WINDOW_AUTOSIZE );
-	cv::moveWindow( "Median Red", 100, 100);
-	cv::imshow( "Median Red", red );                   
-	cv::waitKey(0);
 
 
 	/**
@@ -113,6 +127,40 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
+	cv::Mat blue, green, red;
+	// "channels" is a vector of 3 Mat arrays:
+	std::vector<cv::Mat> channels_vector(3);
+	// split img:
+	cv::split(img02, channels_vector);
+	// get the channels (BGR)
+	blue = medianBlur(channels_vector[0], kernel_size);
+	green = medianBlur(channels_vector[1], kernel_size);
+	red = medianBlur(channels_vector[2], kernel_size);
+	
+	cv::namedWindow( "Median Red", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Red", 100, 100);
+	cv::imshow( "Median Red", red );                   
+	cv::waitKey(0);
+	cv::namedWindow( "Median Green", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Green", 100, 100);
+	cv::imshow( "Median Green", green );                  
+	cv::waitKey(0);
+	cv::namedWindow( "Median Blue", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Blue", 100, 100);
+	cv::imshow( "Median Blue", blue );                   
+	cv::waitKey(0);
+
+    std::vector<cv::Mat> channels;
+    channels.push_back(blue);
+    channels.push_back(green);
+    channels.push_back(red);
+    cv::Mat medianImg;
+    cv::merge(channels, medianImg);
+
+	cv::namedWindow( "Median Combined", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Median Combined", 100, 100);
+	cv::imshow( "Median Combined", medianImg);                   
+	cv::waitKey(0);
 
 
 	/**
@@ -129,6 +177,14 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
+    cv::Mat lines = cv::imread("lines.png");
+    cv::Mat lines_gray;
+    cv::cvtColor(lines, lines_gray, CV_BGR2GRAY, 1);
+    lines_gray.convertTo(lines_gray, CV_32F, 1.0/255.0);
+	cv::namedWindow( "lines gray", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "lines gray", 100, 100);
+	cv::imshow( "lines gray", lines_gray);
+	cv::waitKey(0);
 
 
 	/**
@@ -136,19 +192,31 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
+    cv::Mat canny = medianBlur(lines_gray, 5);
+    canny.convertTo(canny, CV_8U, 255);
+    cv::Canny(canny, canny, 1, 10);
 
+	cv::namedWindow( "Canny", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Canny", 100, 100);
+	cv::imshow( "Canny", canny);
+	cv::waitKey(0);
 
 	/**
 	 * - Transformiere das Gradientenbild in den Hough-Raum und zeige das Bild an.
 	 */
-	IplImage *hough = cvCreateImage(cvSize(400, 400), IPL_DEPTH_32F, 1);
+    cv::Mat hough = houghTransform(canny);
+	//IplImage *hough = cvCreateImage(cvSize(400, 400), IPL_DEPTH_32F, 1);
 
 /* TODO */
 
-	cvNamedWindow("Hough Space"); 
-	cvShowImage("Hough Space", hough);
-	cvWaitKey(0);
+	//cvNamedWindow("Hough Space"); 
+	//cvShowImage("Hough Space", hough);
+	//cvWaitKey(0);
 	
+	cv::namedWindow("Hough Space", cv::WINDOW_AUTOSIZE);
+	cv::moveWindow( "Hough Space", 100, 100);
+	cv::imshow( "Hough Space", hough);
+	cv::waitKey(0);
 	/**
 	 * - Finde die markantesten Linien und zeichne diese in das Originalbild ein.
 	 */

@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
-    cv::Mat lines = cv::imread("lines.png");
+	cv::Mat lines = cv::Mat(img).clone();//cv::imread("lines.png");
     cv::Mat lines_gray;
     cv::cvtColor(lines, lines_gray, CV_BGR2GRAY, 1);
     lines_gray.convertTo(lines_gray, CV_32F, 1.0/255.0);
@@ -192,19 +192,44 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
-    cv::Mat canny = medianBlur(lines_gray, 5);
+	cv::Mat canny = lines_gray.clone();//medianBlur(lines_gray, 5);
     canny.convertTo(canny, CV_8U, 255);
-    cv::Canny(canny, canny, 1, 10);
 
+	cv::Mat _img;
+	double otsu_thresh_val = cv::threshold(
+		canny, _img, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU
+	);
+	double high_thresh_val  = otsu_thresh_val,
+       lower_thresh_val = otsu_thresh_val * 0.5;
+
+    cv::Canny(canny, canny, lower_thresh_val, high_thresh_val);
 	cv::namedWindow( "Canny", cv::WINDOW_AUTOSIZE );
 	cv::moveWindow( "Canny", 100, 100);
 	cv::imshow( "Canny", canny);
 	cv::waitKey(0);
 
+	cv::Mat sobel_gray = cv::Mat(img).clone();
+    cvtColor(sobel_gray, sobel_gray, CV_BGR2GRAY);
+	cv::Mat grad_x, grad_y;
+	cv::Mat abs_grad_x, abs_grad_y;
+	cv::Sobel( sobel_gray, grad_x, CV_16S, 1, 0, 3 );
+	cv::Sobel( sobel_gray, grad_y, CV_16S, 0, 1, 3 );
+	convertScaleAbs( grad_x, abs_grad_x );
+	convertScaleAbs( grad_y, abs_grad_y );
+	cv::Mat grad;
+	addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+
+	cv::normalize(grad, grad, 0, 255, cv::NORM_MINMAX, CV_16S);
+	grad.convertTo(grad, CV_8U);
+	cv::threshold(grad, grad, 100, 255, cv::THRESH_BINARY);
+	cv::namedWindow( "Gradient", cv::WINDOW_AUTOSIZE );
+	cv::moveWindow( "Gradient", 100, 100);
+	cv::imshow( "Gradient", grad);
+	cv::waitKey();
 	/**
 	 * - Transformiere das Gradientenbild in den Hough-Raum und zeige das Bild an.
 	 */
-    cv::Mat hough = houghTransform(canny);
+    cv::Mat hough = houghTransform(/*canny*/grad);
 	//IplImage *hough = cvCreateImage(cvSize(400, 400), IPL_DEPTH_32F, 1);
 
 /* TODO */
@@ -222,9 +247,40 @@ int main(int argc, char **argv) {
 	 */
 
 /* TODO */
+	std::vector<cv::Point> line_vector;
+	int criteria = 20;  //number of best matches
 
-	cvNamedWindow("Hough Lines");
-	cvShowImage("Hough Lines", img);
-	cvWaitKey(0); 
+	cv::Mat hough_tmp = hough.clone();
+	for (int i = 0; i < criteria; ++i) {
+		cv::Point maximum;
+		cv::minMaxLoc(hough_tmp, 0, 0, 0, &maximum); 
+		line_vector.push_back(maximum);
+		hough_tmp.at<float>(maximum) = 0.f;
+	}
+
+	cv::Mat img_mat = cv::Mat(img).clone();
+	for(int i = 0; i < line_vector.size(); ++i) {
+		//[0,512] -> [0, 2*pi]
+		float theta = 2.f*line_vector[i].x*CV_PI/hough.cols;
+		//[0, 512] -> [0, img-diag]
+		float imgDiag = sqrt(img->width*img->width + img->height*img->height);
+		float r = (float)line_vector[i].y/hough.rows * imgDiag;
+
+
+		cv::Point pt1, pt2;
+		double a = cos(theta), b = sin(theta);
+		double x0 = a*r, y0 = b*r;
+		pt1.x = cvRound(x0 + 1000*(-b));
+		pt1.y = cvRound(y0 + 1000*(a));
+		pt2.x = cvRound(x0 - 1000*(-b));
+		pt2.y = cvRound(y0 - 1000*(a));
+		cv::line( img_mat, pt1, pt2, cv::Scalar(0,0,255), 1, CV_AA);
+
+		std::cout << "(" << pt1.x << "," << pt1.y << ") -- (" << pt2.x << "," << pt2.y << ")" << std::endl; 
+	}
+
+	cv::namedWindow("Hough Lines");
+	cv::imshow("Hough Lines", img_mat);
+	cv::waitKey(0); 
 }
 

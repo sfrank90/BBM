@@ -58,7 +58,15 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-
+	IplImage* img_moved = cvCreateImage(cvGetSize(img1), IPL_DEPTH_32F, 1);
+	float data[] = { 1, 0, -20, 0, 1, 0, 0, 0, 1 };
+	CvMat* trans = cvCreateMatHeader(3, 3, CV_32FC1);
+	cvSetData(trans, data, trans->step);
+	cvWarpPerspective(img1f, img_moved, trans);
+	cv::namedWindow("mainWin", CV_WINDOW_AUTOSIZE);
+	cv::Mat img_moved_final(img_moved);
+	cv::imshow("mainWin", img_moved_final);
+	cvWaitKey(0);
 
 	/**
 	 * Aufgabe: Panorama (15 Punkte)
@@ -90,14 +98,39 @@ int main(int argc, char *argv[]) {
 	*/
 
 /* TODO */
-
+	CvMat *P = cvCreateMat(3, 3, CV_32FC1);
+	CvPoint points1[] = { cvPoint(463, 164), cvPoint(530, 357), cvPoint(618, 357), cvPoint(610, 153) };
+	CvPoint points2[] = { cvPoint(225, 179), cvPoint(294, 370), cvPoint(379, 367), cvPoint(369, 168) };
+	CvPoint2D32f pt1[4], pt2[4];
+	for (int i = 0; i < 4; ++i) {
+		pt2[i].x = points2[i].x;
+		pt2[i].y = points2[i].y;
+		pt1[i].x = points1[i].x;
+		pt1[i].y = points1[i].y;
+	}
+	cvGetPerspectiveTransform(pt1, pt2, P);
 	
 	/**
 	 * - Bestimme die notwendige Bildgröße für das Panoramabild.
 	 */
 
 /* TODO */
+	int h = img1f->height - 1;
+	int w = img1f->width - 1;
+	float p1[] = { 0.0, 0.0, 1.0 };
+	float p2[] = { 0.0, (float)(h), 1.0 };
+	float p3[] = { (float)(w), (float)(h), 1.0 };
+	float p4[] = { (float)(w), 0.0, 1.0 };
 
+	CvMat* P1 = cvCreateMatHeader(3, 1, CV_32FC1);
+	cvSetData(P1, p1, P1->step);
+	CvMat* P2 = cvCreateMatHeader(3, 1, CV_32FC1);
+	cvSetData(P2, p2, P2->step);
+	CvMat* P3 = cvCreateMatHeader(3, 1, CV_32FC1);
+	cvSetData(P3, p3, P3->step);
+	CvMat* P4 = cvCreateMatHeader(3, 1, CV_32FC1);
+	cvSetData(P4, p4, P4->step);
+	
 
 	/**
 	 * - Projiziere das linke Bild in die Bildebene des rechten Bildes. Beachte
@@ -107,14 +140,12 @@ int main(int argc, char *argv[]) {
 
 /* TODO */
 
-
 	/**
 	 * - Bilde das Panoramabild, so dass Pixel, für die zwei Werte vorhanden sind,
 	 *   den Mittelwert zugeordnet bekommen.
 	 */
 
 /* TODO */
-
 
 	/**
 	 * - Zeige das Panoramabild an.

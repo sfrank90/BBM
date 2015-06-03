@@ -122,15 +122,21 @@ int main(int argc, char *argv[]) {
 	float p3[] = { (float)(w), (float)(h), 1.0 };
 	float p4[] = { (float)(w), 0.0, 1.0 };
 
-	CvMat* P1 = cvCreateMatHeader(3, 1, CV_32FC1);
-	cvSetData(P1, p1, P1->step);
-	CvMat* P2 = cvCreateMatHeader(3, 1, CV_32FC1);
-	cvSetData(P2, p2, P2->step);
-	CvMat* P3 = cvCreateMatHeader(3, 1, CV_32FC1);
-	cvSetData(P3, p3, P3->step);
-	CvMat* P4 = cvCreateMatHeader(3, 1, CV_32FC1);
-	cvSetData(P4, p4, P4->step);
 	
+	cv::Mat P1 = P * cv::Mat(3, 1, CV_32FC1, p1);
+	cv::Mat P2 = P * cv::Mat(3, 1, CV_32FC1, p2);
+	cv::Mat P3 = P * cv::Mat(3, 1, CV_32FC1, p3);
+	cv::Mat P4 = P * cv::Mat(3, 1, CV_32FC1, p4);
+
+	// mustn't be zero
+	assert(P1.at<float>(2,0) != 0 && P2.at<float>(2,0) != 0 && P3.at<float>(2,0) != 0 && P4.at<float>(2,0) != 0);
+
+	P1 = P1 / P1.at<float>(2,0);
+	P1 = P2 / P2.at<float>(2,0);
+	P1 = P3 / P3.at<float>(2,0);
+	P1 = P4 / P4.at<float>(2,0);
+
+
 
 	/**
 	 * - Projiziere das linke Bild in die Bildebene des rechten Bildes. Beachte
@@ -140,6 +146,25 @@ int main(int argc, char *argv[]) {
 
 /* TODO */
 
+	std::vector<cv::Mat&> matrices;
+	matrices.push_back(P1);
+	matrices.push_back(P2);
+	matrices.push_back(P3);
+	matrices.push_back(P4);
+	cv::Point minP(P1.at<float>(0,0), P1.at<float>(1,0)), maxP(P1.at<float>(0,0), P1.at<float>(1,0));
+	for(int i = 0; i < matrices.size(); ++i) {
+		for(int j = 0; j < 2; ++j) {
+			minP.x = (int)(min(matrices[i].at<float>(0,0), (float)minP.x));
+			minP.y = (int)(min(matrices[i].at<float>(1,0), (float)minP.y));
+
+			maxP.x = (int)(max(matrices[i].at<float>(0,0), (float)maxP.x)+1.0);
+			maxP.y = (int)(max(matrices[i].at<float>(1,0), (float)maxP.y)+1.0);
+		}
+	}
+
+	// create image
+
+	cv::Mat Panorama = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
 	/**
 	 * - Bilde das Panoramabild, so dass Pixel, für die zwei Werte vorhanden sind,
 	 *   den Mittelwert zugeordnet bekommen.

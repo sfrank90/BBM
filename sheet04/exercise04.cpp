@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
 	minP.x = min(minP.x, 0); minP.y = min(minP.y, 0);
 	maxP.x = max(maxP.x, img1f->width-1); maxP.y = max(maxP.y, img1f->height-1);
 	// create image
-	cv::Mat Panorama = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
-	cv::Mat PLeft = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
-	cv::Mat PRight = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
+	cv::Mat Panorama = cv::Mat(cv::Size(maxP-minP),  CV_32FC1, cv::Scalar(0.0));
+	cv::Mat PLeft = cv::Mat(cv::Size(maxP-minP),  CV_32FC1, cv::Scalar(0.0));
+	cv::Mat PRight = cv::Mat(cv::Size(maxP-minP),  CV_32FC1, cv::Scalar(0.0));
 
 	cv::Mat matImg1f = cv::Mat( img1f);
 	cv::Mat matImg2f = cv::Mat( img2f);
@@ -196,8 +196,6 @@ int main(int argc, char *argv[]) {
 
 	cv::imshow("mainWin", PLeft);
 	cv::waitKey(0);
-	cv::imshow("mainWin", PRight);
-	cv::waitKey(0);
 	cv::imshow("mainWin", Panorama);
 	cv::waitKey(0);
 	/**
@@ -205,6 +203,18 @@ int main(int argc, char *argv[]) {
 	 *   den Mittelwert zugeordnet bekommen.
 	 */
 
+	cv::Mat mask = (Panorama > 0.0) & (PLeft > 0.0);
+	cv::imshow("mainWin", mask);
+	cv::waitKey(0);
+
+	mask.convertTo(mask,CV_32FC1, 0.5/255.); 
+	cv::Mat weighted = cv::Mat(Panorama.size(),  CV_32FC1, cv::Scalar(1.0)) - mask;
+
+	Panorama = Panorama + PLeft;
+	cv::multiply(Panorama, weighted, Panorama);
+
+	cv::imshow("mainWin", Panorama);
+	cv::waitKey(0);
 /* TODO */
 
 	/**

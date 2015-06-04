@@ -132,9 +132,9 @@ int main(int argc, char *argv[]) {
 	assert(P1.at<float>(2,0) != 0 && P2.at<float>(2,0) != 0 && P3.at<float>(2,0) != 0 && P4.at<float>(2,0) != 0);
 
 	P1 = P1 / P1.at<float>(2,0);
-	P1 = P2 / P2.at<float>(2,0);
-	P1 = P3 / P3.at<float>(2,0);
-	P1 = P4 / P4.at<float>(2,0);
+	P2 = P2 / P2.at<float>(2,0);
+	P3 = P3 / P3.at<float>(2,0);
+	P4 = P4 / P4.at<float>(2,0);
 
 
 
@@ -145,26 +145,61 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-
-	std::vector<cv::Mat&> matrices;
-	matrices.push_back(P1);
-	matrices.push_back(P2);
-	matrices.push_back(P3);
-	matrices.push_back(P4);
+	///////// Hier wird irgendwo ein fehler sein bei der Groesse...
+	std::vector<cv::Mat*> matrices;
+	matrices.push_back(&P1);
+	matrices.push_back(&P2);
+	matrices.push_back(&P3);
+	matrices.push_back(&P4);
 	cv::Point minP(P1.at<float>(0,0), P1.at<float>(1,0)), maxP(P1.at<float>(0,0), P1.at<float>(1,0));
 	for(int i = 0; i < matrices.size(); ++i) {
-		for(int j = 0; j < 2; ++j) {
-			minP.x = (int)(min(matrices[i].at<float>(0,0), (float)minP.x));
-			minP.y = (int)(min(matrices[i].at<float>(1,0), (float)minP.y));
+			minP.x = (int)(min(matrices[i]->at<float>(0,0), (float)minP.x));
+			minP.y = (int)(min(matrices[i]->at<float>(1,0), (float)minP.y));
 
-			maxP.x = (int)(max(matrices[i].at<float>(0,0), (float)maxP.x)+1.0);
-			maxP.y = (int)(max(matrices[i].at<float>(1,0), (float)maxP.y)+1.0);
+			maxP.x = (int)(max(matrices[i]->at<float>(0,0), (float)maxP.x)+1.0);
+			maxP.y = (int)(max(matrices[i]->at<float>(1,0), (float)maxP.y)+1.0);
+	}
+
+	minP.x = min(minP.x, 0); minP.y = min(minP.y, 0);
+	maxP.x = max(maxP.x, img1f->width-1); maxP.y = max(maxP.y, img1f->height-1);
+	// create image
+	cv::Mat Panorama = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
+	cv::Mat PLeft = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
+	cv::Mat PRight = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
+
+	cv::Mat matImg1f = cv::Mat( img1f);
+	cv::Mat matImg2f = cv::Mat( img2f);
+	for(int y=0; y < matImg1f.rows; ++y ) {
+		for(int x=0; x < matImg1f.cols; ++x ) {
+			PLeft.at<float>(y,x) = matImg1f.at<float>(y,x);
+		}
+	}
+	for(int y=0; y < matImg2f.rows; ++y ) {
+		for(int x=0; x < matImg2f.cols; ++x ) {
+			PRight.at<float>(y,x) = matImg2f.at<float>(y,x);
 		}
 	}
 
-	// create image
+	
+	cv::imshow("mainWin", PLeft);
+	cv::waitKey(0);
+	cv::imshow("mainWin", PRight);
+	cv::waitKey(0);
 
-	cv::Mat Panorama = cv::Mat(cv::Size(maxP-minP),  CV_32FC1);
+	float trans2[] = { 1.0, 0.0, -minP.x, 0.0, 1.0, -minP.y, 0.0, 0.0, 1.0};
+	cv::Mat translation(3,3,CV_32FC1,trans2);
+	//translate P
+	cv::Mat Pnew = translation*cv::Mat(P);
+	cv::warpPerspective(PLeft, Panorama, Pnew, Panorama.size());
+	cv::warpPerspective(PRight, PLeft, translation, PLeft.size());
+	PRight = PLeft.clone();
+
+	cv::imshow("mainWin", PLeft);
+	cv::waitKey(0);
+	cv::imshow("mainWin", PRight);
+	cv::waitKey(0);
+	cv::imshow("mainWin", Panorama);
+	cv::waitKey(0);
 	/**
 	 * - Bilde das Panoramabild, so dass Pixel, für die zwei Werte vorhanden sind,
 	 *   den Mittelwert zugeordnet bekommen.

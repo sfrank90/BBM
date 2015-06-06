@@ -59,10 +59,12 @@ int main(int argc, char *argv[]) {
 
 /* TODO */
 	IplImage* img_moved = cvCreateImage(cvGetSize(img1), IPL_DEPTH_32F, 1);
+	cv::Mat matImg1f_task1 = cv::Mat(img1f);
+	cv::Mat matImgMoved = cv::Mat(img_moved);
+
 	float data[] = { 1, 0, -20, 0, 1, 0, 0, 0, 1 };
-	CvMat* trans = cvCreateMatHeader(3, 3, CV_32FC1);
-	cvSetData(trans, data, trans->step);
-	cvWarpPerspective(img1f, img_moved, trans);
+	cv::Mat trans(3, 3, CV_32FC1, data);;
+	cv::warpPerspective(matImg1f_task1, matImgMoved, trans, matImgMoved.size());
 	cv::namedWindow("mainWin", CV_WINDOW_AUTOSIZE);
 	cv::Mat img_moved_final(img_moved);
 	cv::imshow("mainWin", img_moved_final);

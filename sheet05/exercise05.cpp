@@ -235,8 +235,22 @@ int matchDescriptors(const SIFTFeature &feat, const vector<SIFTFeature> &featlis
 	 * When no match is found -1 is returned.
 	 */
 
-/* TODO */
+	int bestMatch = 0;
+	float bestDist = std::numeric_limits<float>::infinity(), 
+		   secondBestDist = std::numeric_limits<float>::infinity();
 
+/* TODO */
+	for(int i = 0; i < featlist.size(); ++i) {
+		float dist = compareDescriptors(feat, featlist[i]);
+
+		if(dist < bestDist) {
+			secondBestDist = bestDist;
+			bestDist = dist;
+			bestMatch = i;
+		}
+	}
+
+	return (bestDist < ratio*secondBestDist) ? bestMatch : -1;
 }
 
 /**

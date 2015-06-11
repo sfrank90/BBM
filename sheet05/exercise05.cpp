@@ -273,8 +273,77 @@ void RANSACTransform(const unsigned int &ransac_iterations, const vector<SIFTFea
 		const vector<pair<unsigned int, unsigned int> > &ptpairs, CvMat *P_in) {
 
 /* TODO */
+			assert(ptpairs.size() >= 4);
 
+			std::set<int> best_match;
+			// see wiki
+			for(int i = 0; i < ransac_iterations; ++i) {
+				//maybeinliers = n randomly selected values from data
+				cv::RNG rng(0xFFFFFFFF);
+				std::set<int> random_samples;
+				while(random_samples.size() < 4) {
+					random_samples.insert(rng.uniform(0, ptpairs.size()));
+				}
+				
+				//maybemodel = model parameters fitted to maybeinliers
+				// => we want to test the homography
+				
+				cv::Point2f p1[4], p2[4];
+				int j = 0;
+				for(std::set<int>::iterator it = random_samples.begin(); it != random_samples.end(); ++it) {
+					p1[j] = keypoints1[ptpairs[*it].first].getPos();
+					p2[j++] = keypoints2[ptpairs[*it].second].getPos();
+				}
 
+				cv::Mat H = cv::getPerspectiveTransform(p1, p2);
+				H.convertTo(H, CV_32FC1);
+				//alsoinliers = empty set
+				/*for every point in data not in maybeinliers {
+					if point fits maybemodel with an error smaller than t
+						 add point to alsoinliers
+				}*/
+				std::set<int> also_inliers;
+				int inlier_idx = 0;
+				for(auto it = ptpairs.begin(); it != ptpairs.end(); ++it, ++inlier_idx) {
+					int x1 = keypoints1[it->first].x;
+					int y1 = keypoints1[it->first].y;
+					int x2 = keypoints2[it->second].x;
+					int y2 = keypoints2[it->second].y;
+
+					int data[3] = {x1, y1, 1};
+					cv::Mat transform = H*cv::Mat(3,1, CV_32FC1, data);
+
+					float dx = transform.at<float>(0,0) / transform.at<float>(2,0) - x2;
+					float dy = transform.at<float>(1,0) / transform.at<float>(2,0) - y2;
+
+					if(abs(dx) < 4 && abs(dy) < 4) {
+						also_inliers.insert(inlier_idx);
+					}
+				}
+
+				if(also_inliers.size() > best_match.size()) {
+					best_match = also_inliers;
+				}
+			}
+
+			std::vector<cv::Point2f> src, dst;
+
+			for(auto it = best_match.begin(); it != best_match.end(); ++it) {
+				src.push_back(keypoints1[ptpairs[*it].first].getPos());
+				dst.push_back(keypoints2[ptpairs[*it].second].getPos());
+			}
+			
+			cv::Mat tmp = cv::findHomography(src, dst/*,CV_RANSAC*/);
+			tmp.convertTo(tmp, CV_32FC1);
+
+			for(int i = 0; i < 3; ++i) {
+				for(int j = 0; j < 3; ++j) {
+					cvmSet(P_in, i, j, tmp.at<float>(i,j));
+				}
+			}
+
+			std::cout << tmp << std::endl;
+			cv::waitKey(0);
 	/**
 	 * - Berechne mit allen gültigen Korrespondenzen eine Homographie zwischen
 	 *   den Bildern. 
@@ -366,6 +435,8 @@ int main(int argc, char *argv[]) {
 	//Calulate best projective transform with RANSAC
 	CvMat* P = cvCreateMat(3, 3, CV_32FC1);
 	RANSACTransform(100, keypoints1, keypoints2, ptpairs, P);
+	std::cout << cv::Mat(P) << std::endl;
+	cv::waitKey(0);
 	createPanorama(img1f, img2f, P);
 
 	// destroy the window

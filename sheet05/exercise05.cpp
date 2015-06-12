@@ -269,21 +269,70 @@ int matchDescriptors(const SIFTFeature &feat, const vector<SIFTFeature> &featlis
  *   Abweichung. Bei gleicher Anzahl konsistenter Korrespondenzen entscheidet
  *   die Gesamtabweichung aller gültigen Korrespondenzen.
  */
+
 void RANSACTransform(const unsigned int &ransac_iterations, const vector<SIFTFeature> &keypoints1, const vector<SIFTFeature> &keypoints2, 
 		const vector<pair<unsigned int, unsigned int> > &ptpairs, CvMat *P_in) {
 
-/* TODO */
+    /* TODO */
 
+    static const int max_distance = 4;
+    int outliers = ptpairs.size();
+    for(int i = 0; i < ransac_iterations; ++i) {
+        //size of subset
+        std::vector<int> indices(ptpairs.size());
+        std::iota(begin(indices), end(indices), 0);
+        std::random_shuffle(begin(indices), end(indices));
+
+        CvPoint2D32f pt1[4], pt2[4];
+        CvMat *P = cvCreateMat(3, 3, CV_32FC1);
+
+        for (int i = 0; i < 4; ++i) {
+            pt1[i].x = keypoints1[ptpairs[indices[i]].first].x;
+            pt1[i].y = keypoints1[ptpairs[indices[i]].first].y;
+            pt2[i].x = keypoints2[ptpairs[indices[i]].second].x;
+            pt2[i].y = keypoints2[ptpairs[indices[i]].second].y;
+        }
+
+        cvGetPerspectiveTransform(pt1, pt2, P);
+
+        int current_outliers = 0;
+        for(const auto &p : ptpairs) {
+            if(p.first == indices[0]
+               || p.first == indices[1]
+               || p.first == indices[2]
+               || p.first == indices[3])
+                    continue;
+
+            auto _p1 = keypoints1[p.first].getPos();
+            float p1[] = {_p1.x, _p1.y, 1};
+            cv::Mat transformedP = P * cv::Mat(3, 1, CV_32FC1, p1);
+            transformedP /= transformedP.at<float>(2, 0);
+
+            auto p2 = keypoints2[p.second].getPos();
+
+            if (std::abs(transformedP.at<float>(0, 0) - p2.x) > max_distance
+                || std::abs(transformedP.at<float>(1, 0) - p2.y) > max_distance)
+                ++current_outliers;
+        }
+
+        if(current_outliers < outliers) {
+            outliers = current_outliers;
+            *P_in = *P;
+        } else {
+                cvReleaseMat(&P);
+        }
+    }
+    std::cout << "there are " << outliers << " outliers left" << std::endl;
+}
 
 	/**
 	 * - Berechne mit allen gültigen Korrespondenzen eine Homographie zwischen
 	 *   den Bildern. 
-	 * - Stelle mit dieser Homographie ein Panorama her.
+	
+ * - Stelle mit dieser Homographie ein Panorama her.
 	 */
 
 /* TODO */
-
-}
 
 void findPairs(const vector<SIFTFeature> &keypoints1, const vector<SIFTFeature> &keypoints2, 
 		vector<pair<unsigned int, unsigned int> > &ptpairs, float ratio = 0.6) {

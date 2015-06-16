@@ -19,6 +19,51 @@
 
 using namespace std;
 
+void createDepthMap(const cv::Mat &src1, const cv::Mat &src2, cv::Mat &dst, int radius_from = -10, int radius_to = 10) {
+
+	cv::Mat src1_clone = src1.clone();
+	src1_clone.convertTo(src1_clone, CV_32FC3);
+	cv::Mat src2_clone = src2.clone();
+	src2_clone.convertTo(src2_clone, CV_32FC3);
+
+	dst = cv::Mat(src1.rows, src1.cols, CV_32F);
+
+	float min_value = numeric_limits<float>::infinity();
+	float max_value = -numeric_limits<float>::infinity();;
+	for(int x = 0; x < src1.cols; ++x) {
+		for(int y = 0; y < src1.rows; ++y) {
+			const cv::Vec3f &v1 = src1_clone.at<cv::Vec3f>(y,x); 
+
+			float best_radius = 0;
+			float min_error = numeric_limits<float>::infinity();
+			// => rektifiziert, horizontal reicht?
+			for(int rx = radius_from; rx <= radius_to; ++rx) {
+				if((x+rx) < 0 || (x+rx) >= src2.cols)
+					continue;
+				const cv::Vec3f &v2 = src2_clone.at<cv::Vec3f>(y,x+rx); 
+
+				//rgb-disparitaet
+				float d = abs(v1[0]-v2[0]) + abs(v1[1]-v2[1]) + abs(v1[2]-v2[2]);
+
+				if(d < min_error) {
+					best_radius = rx;
+					min_error = d;
+				}
+			}
+			if(best_radius < min_value) min_value = best_radius;
+			if(best_radius > max_value) max_value = best_radius;
+			dst.at<float>(y,x) = best_radius;
+		}
+	}
+	///scale map
+	for(int x = 0; x < dst.cols; ++x) {
+		for(int y = 0; y < dst.rows; ++y) {
+			//dst.at<float>(y,x) /= max_dist; 
+			dst.at<float>(y,x) = 1.0f - (dst.at<float>(y,x) - min_value) / (max_value - min_value);
+		}
+	}
+}
+
 int main(int argc, char *argv[]) {
 	if(argc<3){
 		cout << "Usage: bbm6 <image-file-name1> <image-file-name2>" << endl;
@@ -46,8 +91,8 @@ int main(int argc, char *argv[]) {
 	cvConvertScale(img2, img2f, 1.0/255.0);
 
 	//Create depth map
-	IplImage* depth = cvCreateImage(cvGetSize(img2), IPL_DEPTH_32F, 1);
-
+	//IplImage* depth = cvCreateImage(cvGetSize(img2), IPL_DEPTH_32F, 1);
+	cv::Mat depth;
 	/**
 	 * Aufgabe: Erzeugen einer Tiefenkarte (10 Punkte)
 	 *
@@ -63,7 +108,9 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-
+    createDepthMap(img1f,img2f,depth,-10,10);
+    cv::imshow("mainWin",depth);
+	cv::waitKey(0);
 
 	/**
 	 * Aufgabe: Robustere Methoden (20 Punkte)
@@ -82,7 +129,9 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-
+	//createBetterDepthMapByBetterDescriptor(img1f,img2f,depth,radius);
+    //cv::imshow("better solution",depth);
+	//cv::waitKey(0);
 
 	return 0;
 }

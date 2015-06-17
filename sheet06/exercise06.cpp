@@ -19,8 +19,54 @@
 
 using namespace std;
 
-void createDepthMap(const cv::Mat &src1, const cv::Mat &src2, cv::Mat &dst, int radius_from = -10, int radius_to = 10) {
+class SimpleDisp {
+public:
+	static float calc(const cv::Mat &src1, const cv::Mat &src2, int x, int y, int w, int dx) {
+		if((x+dx) < 0 || (x+dx) >= src2.cols)
+			return 0.0;
+		const cv::Vec3f &v1 = src1.at<cv::Vec3f>(y,x);
+		const cv::Vec3f &v2 = src2.at<cv::Vec3f>(y,x+dx);
+		return abs(v1[0]-v2[0]) + abs(v1[1]-v2[1]) + abs(v1[2]-v2[2]);
+	}
+};
 
+class SAD {
+public:
+	static float calc(const cv::Mat &src1, const cv::Mat &src2, int x, int y, int w, int dx) {
+		float val = 0;
+		for(int i = -w/2; i <= w/2; ++i) {
+			for(int j = -w/2; j <= w/2; ++j) {
+				if(y+i < 0 || x+j < 0 || x+j+dx < 0 || y+i >= src1.rows || x+j >= src1.cols || x+j+dx >= src1.cols)
+					continue;
+				const cv::Vec3f &v1 = src1.at<cv::Vec3f>(y+i,x+j);
+				const cv::Vec3f &v2 = src2.at<cv::Vec3f>(y+i,x+j+dx);
+				val += abs(v1[0]-v2[0]) + abs(v1[1]-v2[1]) + abs(v1[2]-v2[2]);
+			}
+		}
+		return val;
+	}
+};
+
+class SSD {
+public:
+	static float calc(const cv::Mat &src1, const cv::Mat &src2, int x, int y, int w, int dx) {
+		float val = 0;
+		for(int i = -w/2; i <= w/2; ++i) {
+			for(int j = -w/2; j <= w/2; ++j) {
+				if(y+i < 0 || x+j < 0 || x+j+dx < 0 || y+i >= src1.rows || x+j >= src1.cols || x+j+dx >= src1.cols)
+					continue;
+				const cv::Vec3f &v1 = src1.at<cv::Vec3f>(y+i,x+j);
+				const cv::Vec3f &v2 = src2.at<cv::Vec3f>(y+i,x+j+dx);
+				float v = abs(v1[0]-v2[0]) + abs(v1[1]-v2[1]) + abs(v1[2]-v2[2]);
+				val += (v*v);
+			}
+		}
+		return val;
+	}
+};
+
+template<typename D>
+void createDepthMap(const cv::Mat &src1, const cv::Mat &src2, cv::Mat &dst, int radius_from = -10, int radius_to = 10) {
 	cv::Mat src1_clone = src1.clone();
 	src1_clone.convertTo(src1_clone, CV_32FC3);
 	cv::Mat src2_clone = src2.clone();
@@ -29,21 +75,17 @@ void createDepthMap(const cv::Mat &src1, const cv::Mat &src2, cv::Mat &dst, int 
 	dst = cv::Mat(src1.rows, src1.cols, CV_32F);
 
 	float min_value = numeric_limits<float>::infinity();
-	float max_value = -numeric_limits<float>::infinity();;
+	float max_value = -numeric_limits<float>::infinity();
+
 	for(int x = 0; x < src1.cols; ++x) {
 		for(int y = 0; y < src1.rows; ++y) {
-			const cv::Vec3f &v1 = src1_clone.at<cv::Vec3f>(y,x); 
 
 			float best_radius = 0;
 			float min_error = numeric_limits<float>::infinity();
 			// => rektifiziert, horizontal reicht?
 			for(int rx = radius_from; rx <= radius_to; ++rx) {
-				if((x+rx) < 0 || (x+rx) >= src2.cols)
-					continue;
-				const cv::Vec3f &v2 = src2_clone.at<cv::Vec3f>(y,x+rx); 
 
-				//rgb-disparitaet
-				float d = abs(v1[0]-v2[0]) + abs(v1[1]-v2[1]) + abs(v1[2]-v2[2]);
+				float d = D::calc(src1_clone, src2_clone, x, y, 3, rx);
 
 				if(d < min_error) {
 					best_radius = rx;
@@ -92,7 +134,7 @@ int main(int argc, char *argv[]) {
 
 	//Create depth map
 	//IplImage* depth = cvCreateImage(cvGetSize(img2), IPL_DEPTH_32F, 1);
-	cv::Mat depth;
+	cv::Mat depth, depth2, depth3;
 	/**
 	 * Aufgabe: Erzeugen einer Tiefenkarte (10 Punkte)
 	 *
@@ -108,7 +150,7 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-    createDepthMap(img1f,img2f,depth,-10,10);
+    createDepthMap<SimpleDisp>(img1f,img2f,depth,-10,10);
     cv::imshow("mainWin",depth);
 	cv::waitKey(0);
 
@@ -129,10 +171,13 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-	//createBetterDepthMapByBetterDescriptor(img1f,img2f,depth,radius);
-    //cv::imshow("better solution",depth);
-	//cv::waitKey(0);
+	createDepthMap<SAD>(img1f,img2f,depth2);
+    cv::imshow("better solution",depth2);
+	cv::waitKey(0);
 
+	createDepthMap<SSD>(img1f,img2f,depth3);
+	cv::imshow("better solution #2",depth3);
+	cv::waitKey(0);
 	return 0;
 }
 

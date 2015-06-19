@@ -71,7 +71,8 @@ public:
 
 class SmoothConstraint {
 public:
-	static float calc(const cv::Mat &src1, const cv::Mat &src2, int x, int y, int dx, int w = 5, float lambda = 0 ) {
+	static cv::Mat smap;
+	static float calc(const cv::Mat &src1, const cv::Mat &src2, int x, int y, int dx, int w = 5, float lambda = 0) {
 		if((x+dx) < 0 || (x+dx) >= src2.cols)
 			return 0.0;
 		const cv::Vec3f &v1 = src1.at<cv::Vec3f>(y,x);
@@ -93,11 +94,15 @@ public:
 		//apply laplacian operator
 		cv::Laplacian(diff, diff, CV_32F, w);
 		//apply l1 norm
-		val += lambda * (float)cv::norm(diff, CV_L1);
+		float t = lambda * (float)cv::norm(diff, CV_L1);
+		val += t;
+
+		SmoothConstraint::smap.at<float>(y,x) = t;
 
 		return val;
 	}
 };
+cv::Mat SmoothConstraint::smap = cv::Mat();
 
 template<typename D>
 void createDepthMap(const cv::Mat &src1, const cv::Mat &src2, cv::Mat &dst, int radius_from = -10, int radius_to = 10, int w = 5, float lambda = 0 ) {
@@ -147,9 +152,17 @@ int main(int argc, char *argv[]) {
 	}
 
 	// create a window
-	cvNamedWindow("mainWin", CV_WINDOW_AUTOSIZE); 
-	cvMoveWindow("mainWin", 100, 100);
+	cvNamedWindow("Simple Depth", CV_WINDOW_AUTOSIZE); 
+	cvMoveWindow("Simple Depth", 100, 100);
 
+	cvNamedWindow("SAD", CV_WINDOW_AUTOSIZE); 
+	cvMoveWindow("SAD", 100, 100);
+
+	cvNamedWindow("SSD", CV_WINDOW_AUTOSIZE); 
+	cvMoveWindow("SSD", 100, 100);
+
+	cvNamedWindow("Smooth", CV_WINDOW_AUTOSIZE); 
+	cvMoveWindow("Smooth", 100, 100);
 	// load an image
 	IplImage *img1 = cvLoadImage(argv[1]);
 	IplImage *img2 = cvLoadImage(argv[2]);
@@ -184,8 +197,8 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-    createDepthMap<SimpleDisp>(img1f,img2f,depth,-70,10);
-    cv::imshow("mainWin",depth);
+        createDepthMap<SimpleDisp>(img1f,img2f,depth,-60,10);
+        cv::imshow("Simple Depth",depth);
 	cv::waitKey(0);
 
 	/**
@@ -205,16 +218,23 @@ int main(int argc, char *argv[]) {
 	 */
 
 /* TODO */
-	//createDepthMap<SAD>(img1f,img2f,depth, -70, 10);
- //   cv::imshow("better solution",depth);
-	//cv::waitKey(0);
+	createDepthMap<SAD>(img1f,img2f,depth, -60, 10);
+        cv::imshow("SAD",depth);
+	cv::waitKey(0);
 
-	//createDepthMap<SSD>(img1f,img2f,depth);
-	//cv::imshow("better solution #2",depth);
-	//cv::waitKey(0);
+	createDepthMap<SSD>(img1f,img2f,depth, -60, 10);
+	cv::imshow("SSD",depth);
+	cv::waitKey(0);
 
-	createDepthMap<SmoothConstraint>(img1f,img2f,depth, -10, 10, 3, 3.0);
-	cv::imshow("better solution #2",depth);
+	SmoothConstraint::smap = cv::Mat(depth.rows, depth.cols, CV_32F);
+
+	createDepthMap<SmoothConstraint>(img1f,img2f,depth, -60, 10, 5, 3.0);
+	cv::imshow("Smooth",depth);
+	cv::waitKey(0);
+
+	cv::normalize(SmoothConstraint::smap, SmoothConstraint::smap, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+
+	cv::imshow("Smooth2",SmoothConstraint::smap);
 	cv::waitKey(0);
 	return 0;
 }

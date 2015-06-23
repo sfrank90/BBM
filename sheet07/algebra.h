@@ -33,7 +33,16 @@
 
 #include <stdlib.h>
 #include <assert.h>
+
+#ifdef WIN32
+// Windows
+#define _USE_MATH_DEFINES
+#include <math.h>
+#else
 #include <cmath>
+#endif
+
+
 
 namespace alg {
   // this line defines a new type: pointer to a function which returns a

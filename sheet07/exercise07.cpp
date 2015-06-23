@@ -53,7 +53,13 @@
  */
 
 #include <iostream>
+#ifdef WIN32
+// Windows
+#define _USE_MATH_DEFINES
+#include <math.h>
+#else
 #include <cmath>
+#endif
 #include <cfloat>
 #include <cassert>
 #include <string>
@@ -156,6 +162,42 @@ void applySpaceCarving(
 
 
 /* TODO */
+	// iterate in positive z direction
+	for (int z = 0; z<gridRes; ++z){
+		for (int y = 0; y<gridRes; ++y){
+			for (int x = 0; x<gridRes; ++x){
+				alg::vec4 pos(-0.5f + x*step,
+					-0.5f + y*step,
+					-0.5f + z*step,
+					1.0f);
+
+				alg::vec3 col(0.0, 0.0, 0.0);
+
+				for (int i = 0; i<numInput; ++i){
+					alg::vec4 tpos = textureMatrices.at(i) * pos;
+
+					// homogenize //
+					alg::vec2 imgPos(tpos[0] / tpos[3],
+						tpos[1] / tpos[3]);
+
+					// image positions //
+					int xImg = round(imgPos[0]);
+					int yImg = round(imgPos[1]);
+
+					pixPositions.at(i) = std::make_pair(xImg, yImg);
+				}
+
+				if (isImgConsistent(pixPositions, numInput, imgWidth, imgHeight, imgRemoval)
+					&& isSilhouetteConsistent(pixPositions, numInput, imgs, silRemoval)
+					&& isColourConsistent_plane(pos, pixPositions, campos, col, 4, colRemoval, numInput, imgs, diffThresh, step)) {
+					voxel v;
+					v.pos = pos;
+					v.col = col;
+					consistentVoxels.insert(v);
+				}
+			}
+		}
+	}
 
 
 	// remove doubled elements //

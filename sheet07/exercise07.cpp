@@ -308,37 +308,86 @@ bool isColourConsistent_plane(
 	//paarweiser vergleich
 	unsigned int colorAcc[3] = {0,0,0};
 	// color to voxel
-    for (int i=0;i<numInput;i++){
-        unsigned char* oColor = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
-        for(int t=i+1;t<numInput;t++){
-            unsigned char* tColor = ((unsigned char*)(imgs[t]->imageData + imgs[t]->widthStep*pixPositions[t].second) + pixPositions[t].first*imgs[t]->nChannels);
-            //std::cout << diffThresh << std::endl;
-            if (std::max(oColor[0],tColor[0])-std::min(oColor[0],tColor[0])>diffThresh
-                || std::max(oColor[1],tColor[1])-std::min(oColor[1],tColor[1])>diffThresh
-                || std::max(oColor[2],tColor[2])-std::min(oColor[2],tColor[2])>diffThresh){
-                colRemoval = t;
-                return false;
-            }
+    //for (int i=0;i<numInput;i++){
+    //    unsigned char* oColor = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+    //    for(int t=i+1;t<numInput;t++){
+    //        unsigned char* tColor = ((unsigned char*)(imgs[t]->imageData + imgs[t]->widthStep*pixPositions[t].second) + pixPositions[t].first*imgs[t]->nChannels);
+    //        //std::cout << diffThresh << std::endl;
+    //        if (std::max(oColor[0],tColor[0])-std::min(oColor[0],tColor[0])>diffThresh
+    //            || std::max(oColor[1],tColor[1])-std::min(oColor[1],tColor[1])>diffThresh
+    //            || std::max(oColor[2],tColor[2])-std::min(oColor[2],tColor[2])>diffThresh){
+    //            colRemoval = t;
+    //            return false;
+    //        }
+    //    }
+    //    colorAcc[0]+=oColor[0];
+    //    colorAcc[1]+=oColor[1];
+    //    colorAcc[2]+=oColor[2];
+    //}
+    //colorAcc[0]/=numInput;
+    //colorAcc[1]/=numInput;
+    //colorAcc[2]/=numInput;
+
+    //outputColour[0]=colorAcc[0]/255.0f;
+    //outputColour[1]=colorAcc[1]/255.0f;
+    //outputColour[2]=colorAcc[2]/255.0f;
+
+	//
+	std::priority_queue<std::pair<float, int> > queue;
+	alg::vec3 mean(0.0, 0.0, 0.0);
+
+	for (int i=0;i<numInput;i++){
+		unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+		mean[0] += color[0]/255.f;
+		mean[1] += color[1]/255.f;
+		mean[2] += color[2]/255.f;
+	}
+	mean /= numInput;
+	for (int i=0;i<numInput;i++){
+		unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+		alg::vec3 column(color[0]/255.f, color[1]/255.f, color[2]/255.f);
+		//strict weak ordering => greatest first, so take reciprocal
+		queue.push(std::make_pair(1.0/((column-mean).length()+0.0001), i));
+	}
+	alg::vec3 minColor(255,255,255);
+	alg::vec3 maxColor(0,0,0);
+
+	int numIters = 0;
+	for(int i = 0; i < 3; ++i) {
+		if(queue.empty())
+			break;
+		int idx = queue.top().second;
+		unsigned char* color = ((unsigned char*)(imgs[idx]->imageData + imgs[idx]->widthStep*pixPositions[idx].second) + pixPositions[idx].first*imgs[idx]->nChannels);
+		
+		for(int j = 0; j < 3; ++j) {
+			minColor[j] = std::min((unsigned char)minColor[j], color[j]);
+			maxColor[j] = std::max((unsigned char)maxColor[j], color[j]);
+		}
+		
+		alg::vec3 diff = maxColor - minColor;
+		if (diff[0]>diffThresh
+            || diff[1]>diffThresh
+            || diff[3]>diffThresh){
+            colRemoval++;
+            return false;
         }
-        colorAcc[0]+=oColor[0];
-        colorAcc[1]+=oColor[1];
-        colorAcc[2]+=oColor[2];
-    }
-    colorAcc[0]/=numInput;
+
+		numIters++;
+		queue.pop();
+
+		colorAcc[0]+=color[0];
+        colorAcc[1]+=color[1];
+        colorAcc[2]+=color[2];
+	}
+
+	colorAcc[0]/=numInput;
     colorAcc[1]/=numInput;
     colorAcc[2]/=numInput;
 
-    outputColour[0]=colorAcc[0]/255.0f;
+	outputColour[0]=colorAcc[0]/255.0f;
     outputColour[1]=colorAcc[1]/255.0f;
     outputColour[2]=colorAcc[2]/255.0f;
 
-	//
-	//std::priority_queue<std::pair<float, int> > queue;
-	//alg::vec3 mean(0.0, 0.0, 0.0);
-
-	//for (int i=0;i<numInput;i++){
-
-	//}
 	return true;
 }
 

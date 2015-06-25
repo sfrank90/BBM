@@ -305,39 +305,40 @@ bool isColourConsistent_plane(
 	const alg::vec3 voxPos = alg::vec3(voxPosition[0], voxPosition[1], voxPosition[2]);
 
 /* TODO */
+	//paarweiser vergleich
+	unsigned int colorAcc[3] = {0,0,0};
 	// color to voxel
-	unsigned char minR, maxR, minG, maxG, minB, maxB;
-	minR = minG = minB = 255;
-	maxR = maxG = maxB = 0;
-	
-	for (unsigned int index = 0; index<numInput; ++index){
+    for (int i=0;i<numInput;i++){
+        unsigned char* oColor = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+        for(int t=i+1;t<numInput;t++){
+            unsigned char* tColor = ((unsigned char*)(imgs[t]->imageData + imgs[t]->widthStep*pixPositions[t].second) + pixPositions[t].first*imgs[t]->nChannels);
+            //std::cout << diffThresh << std::endl;
+            if (std::max(oColor[0],tColor[0])-std::min(oColor[0],tColor[0])>diffThresh
+                || std::max(oColor[1],tColor[1])-std::min(oColor[1],tColor[1])>diffThresh
+                || std::max(oColor[2],tColor[2])-std::min(oColor[2],tColor[2])>diffThresh){
+                colRemoval = t;
+                return false;
+            }
+        }
+        colorAcc[0]+=oColor[0];
+        colorAcc[1]+=oColor[1];
+        colorAcc[2]+=oColor[2];
+    }
+    colorAcc[0]/=numInput;
+    colorAcc[1]/=numInput;
+    colorAcc[2]/=numInput;
 
-		const int xpos = pixPositions[index].first;
-		const int ypos = pixPositions[index].second;
-		const IplImage *img = imgs.at(index);
+    outputColour[0]=colorAcc[0]/255.0f;
+    outputColour[1]=colorAcc[1]/255.0f;
+    outputColour[2]=colorAcc[2]/255.0f;
 
-		unsigned char red = CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 0);
-		unsigned char green = CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 1);
-		unsigned char blue = CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 2);
+	//
+	//std::priority_queue<std::pair<float, int> > queue;
+	//alg::vec3 mean(0.0, 0.0, 0.0);
 
-		minR = std::min(red, minR);
-		minG = std::min(green, minG);
-		minB = std::min(blue, minB);
-		maxR = std::max(red, maxR);
-		maxG = std::max(green, maxG);
-		maxB = std::max(blue, maxB);
+	//for (int i=0;i<numInput;i++){
 
-		if (((maxR - minR) > diffThresh) ||
-			((maxG - minG) > diffThresh) ||
-			((maxB - minB) > diffThresh)){
-			++colRemoval;
-			return false;
-		}
-		outputColour[0] += static_cast<float>(CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 0)) / 255.0f;
-		outputColour[1] += static_cast<float>(CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 1)) / 255.0f;
-		outputColour[2] += static_cast<float>(CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 2)) / 255.0f;
-	}
-
+	//}
 	return true;
 }
 

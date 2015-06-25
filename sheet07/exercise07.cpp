@@ -79,9 +79,9 @@
 #include <GL/glut.h>
 #endif
 
-float round(float toRound) {
+/*float round(float toRound) {
   return std::ceil(toRound - 0.5);
-}
+}*/
 
 struct voxel{
 	alg::vec3 pos, col;
@@ -301,9 +301,42 @@ bool isColourConsistent_plane(
 	assert(pixPositions.size() == static_cast<unsigned int>(numInput));
 	assert(camPos.size() == static_cast<unsigned int>(numInput));
 
+	outputColour = alg::vec3(0.0, 0.0, 0.0);
+	const alg::vec3 voxPos = alg::vec3(voxPosition[0], voxPosition[1], voxPosition[2]);
 
 /* TODO */
+	// color to voxel
+	unsigned char minR, maxR, minG, maxG, minB, maxB;
+	minR = minG = minB = 255;
+	maxR = maxG = maxB = 0;
+	
+	for (unsigned int index = 0; index<numInput; ++index){
 
+		const int xpos = pixPositions[index].first;
+		const int ypos = pixPositions[index].second;
+		const IplImage *img = imgs.at(index);
+
+		unsigned char red = CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 0);
+		unsigned char green = CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 1);
+		unsigned char blue = CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 2);
+
+		minR = std::min(red, minR);
+		minG = std::min(green, minG);
+		minB = std::min(blue, minB);
+		maxR = std::max(red, maxR);
+		maxG = std::max(green, maxG);
+		maxB = std::max(blue, maxB);
+
+		if (((maxR - minR) > diffThresh) ||
+			((maxG - minG) > diffThresh) ||
+			((maxB - minB) > diffThresh)){
+			++colRemoval;
+			return false;
+		}
+		outputColour[0] += static_cast<float>(CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 0)) / 255.0f;
+		outputColour[1] += static_cast<float>(CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 1)) / 255.0f;
+		outputColour[2] += static_cast<float>(CV_IMAGE_ELEM(img, unsigned char, ypos, xpos * img->nChannels + 2)) / 255.0f;
+	}
 
 	return true;
 }

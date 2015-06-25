@@ -224,7 +224,12 @@ bool isImgConsistent(
 
 
 /* TODO */
-
+	for (int i=0; i<numInput; i++){
+        if (pixPositions[i].first < 0 || pixPositions[i].first > imgWidth[i] || pixPositions[i].second < 0 || pixPositions[i].second > imgHeight[i]){
+            imgRemoval = i;
+            return false;
+        }
+    }
 	return true;
 }
 
@@ -247,7 +252,14 @@ bool isSilhouetteConsistent(
 
 
 /* TODO */
+    for (int i=0; i<numInput; i++){
 
+        unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+        if(color[0]==255 && color[1]==255 && color[2]==255){
+            silRemoval = i;
+            return false;
+        }
+    }
 
 	return true;
 }

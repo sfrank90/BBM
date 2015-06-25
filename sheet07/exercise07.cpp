@@ -79,9 +79,9 @@
 #include <GL/glut.h>
 #endif
 
-/*float round(float toRound) {
-  return std::ceil(toRound - 0.5);
-}*/
+//float round(float toRound) {
+//  return std::ceil(toRound - 0.5);
+//}
 
 struct voxel{
 	alg::vec3 pos, col;
@@ -367,7 +367,7 @@ bool isColourConsistent_plane(
 		alg::vec3 diff = maxColor - minColor;
 		if (diff[0]>diffThresh
             || diff[1]>diffThresh
-            || diff[3]>diffThresh){
+            || diff[2]>diffThresh){
             colRemoval++;
             return false;
         }

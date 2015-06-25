@@ -79,6 +79,10 @@
 #include <GL/glut.h>
 #endif
 
+float round(float toRound) {
+  return std::ceil(toRound - 0.5);
+}
+
 struct voxel{
 	alg::vec3 pos, col;
 

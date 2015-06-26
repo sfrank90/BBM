@@ -207,10 +207,7 @@ void applySpaceCarving(
 		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
-	imgRemoval = 0;
-	silRemoval = 0;
-	colRemoval = 0;
-
+	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in negative z direction
 	for (int z = gridRes - 1; z >= 0; --z){
@@ -254,9 +251,7 @@ void applySpaceCarving(
 		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
-	imgRemoval = 0;
-	silRemoval = 0;
-	colRemoval = 0;
+	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in positve x direction
 	for (int x = 0; x<gridRes; ++x){
@@ -300,9 +295,7 @@ void applySpaceCarving(
 		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
-	imgRemoval = 0;
-	silRemoval = 0;
-	colRemoval = 0;
+	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in negative x direction
 	for (int x = gridRes - 1; x >= 0; --x){
@@ -346,10 +339,7 @@ void applySpaceCarving(
 		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
-	imgRemoval = 0;
-	silRemoval = 0;
-	colRemoval = 0;
-
+	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in positive y direction
 	for (int y = 0; y<gridRes; ++y){
@@ -393,9 +383,7 @@ void applySpaceCarving(
 		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
 		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
-	imgRemoval = 0;
-	silRemoval = 0;
-	colRemoval = 0;
+	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in negative y direction
 	for (int y = gridRes - 1; y >= 0; --y){
@@ -541,13 +529,27 @@ bool isColourConsistent_plane(
 	const alg::vec3 voxPos = alg::vec3(voxPosition[0], voxPosition[1], voxPosition[2]);
 
 /* TODO */
-	std::vector<int> camIdx;
-	camIdx.reserve(numInput);
+	std::vector<int> camIdx(numInput);
 	for (int i = 0; i<numInput; ++i){
 		alg::vec3 cam = camPos[i];
 
+		/*if ((axis == 0) && (voxPos[0] > cam[0])) // x pos
+			camIdx.push_back(i);
+		if ((axis == 0) && (voxPos[0] < cam[0])) // x neg
+			camIdx.push_back(i);
+
+		if ((axis == 1) && (voxPos[1] > cam[1])) // y pos
+			camIdx.push_back(i);
+		if ((axis == 1) && (voxPos[1] < cam[1])) // y neg
+			camIdx.push_back(i);
+
+		if ((axis == 2) && (voxPos[2] > cam[2])) // z pos
+			camIdx.push_back(i);
+		if ((axis == 2) && (voxPos[2] < cam[2])) // z neg
+			camIdx.push_back(i);*/
+
 		switch (axis){
-		case 0: // x pos
+		case 0: 
 			if (voxPos[0] > cam[0]){ camIdx.push_back(i); }
 			break;
 		case 1: // x neg
@@ -625,7 +627,6 @@ bool isColourConsistent_plane(
 		colorAcc[1] += color[1];
 		colorAcc[2] += color[2];
 	}
-
 
 	colorAcc[0] /= numInput;
 	colorAcc[1] /= numInput;

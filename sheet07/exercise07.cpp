@@ -467,17 +467,17 @@ bool isColourConsistent_plane(
 
 		/*if ((axis == 0) && (voxPos[0] > cam[0])) // x pos
 			camIdx.push_back(i);
-		if ((axis == 0) && (voxPos[0] < cam[0])) // x neg
+		if ((axis == 1) && (voxPos[0] < cam[0])) // x neg
 			camIdx.push_back(i);
 
-		if ((axis == 1) && (voxPos[1] > cam[1])) // y pos
+		if ((axis == 2) && (voxPos[1] > cam[1])) // y pos
 			camIdx.push_back(i);
-		if ((axis == 1) && (voxPos[1] < cam[1])) // y neg
+		if ((axis == 3) && (voxPos[1] < cam[1])) // y neg
 			camIdx.push_back(i);
 
-		if ((axis == 2) && (voxPos[2] > cam[2])) // z pos
+		if ((axis == 4) && (voxPos[2] > cam[2])) // z pos
 			camIdx.push_back(i);
-		if ((axis == 2) && (voxPos[2] < cam[2])) // z neg
+		if ((axis == 5) && (voxPos[2] < cam[2])) // z neg
 			camIdx.push_back(i);*/
 
 		switch (axis){

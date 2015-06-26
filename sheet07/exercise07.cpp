@@ -599,7 +599,7 @@ bool isColourConsistent_plane(
 	alg::vec3 maxColor(0,0,0);
 
 	int numIters = 0;
-	for(int i = 0; (i < 3) && (!queue.empty()); ++i) {
+	for(int i = 0;i < 3; ++i) {
 		if(queue.empty())
 			break;
 		int idx = queue.top().second;
@@ -621,26 +621,19 @@ bool isColourConsistent_plane(
 		numIters++;
 		queue.pop();
 
-		colorAcc[0] += color[0] / 255.0f;
-		colorAcc[1] += color[1] / 255.0f;
-		colorAcc[2] += color[2] / 255.0f;
+		colorAcc[0] += color[0];
+		colorAcc[1] += color[1];
+		colorAcc[2] += color[2];
 	}
-	for (int i = 0; i < 3; ++i){
-		colorAcc[0] /= numIters;
-		colorAcc[1] /= numIters;
-		colorAcc[2] /= numIters;
-	}
-	outputColour[0] = colorAcc[0];
-	outputColour[1] = colorAcc[1];
-	outputColour[2] = colorAcc[2];
 
-	/*colorAcc[0] /= numInput;
+
+	colorAcc[0] /= numInput;
 	colorAcc[1] /= numInput;
 	colorAcc[2] /= numInput;
 
 	outputColour[0] = colorAcc[0] / 255.0f;
 	outputColour[1] = colorAcc[1] / 255.0f;
-	outputColour[2] = colorAcc[2] / 255.0f;*/
+	outputColour[2] = colorAcc[2] / 255.0f;
 
 	return true;
 }

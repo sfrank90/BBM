@@ -581,17 +581,19 @@ bool isColourConsistent_plane(
 	alg::vec3 mean(0.0, 0.0, 0.0);
 
 	for (int i = 0; i<camIdx.size(); i++){
-		unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+		int index = camIdx.at(i);
+		unsigned char* color = ((unsigned char*)(imgs[index]->imageData + imgs[index]->widthStep*pixPositions[index].second) + pixPositions[index].first*imgs[index]->nChannels);
 		mean[0] += color[0]/255.f;
 		mean[1] += color[1]/255.f;
 		mean[2] += color[2]/255.f;
 	}
 	mean /= camIdx.size();
 	for (int i = 0; i<camIdx.size(); i++){
-		unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
+		int index = camIdx.at(i);
+		unsigned char* color = ((unsigned char*)(imgs[index]->imageData + imgs[index]->widthStep*pixPositions[index].second) + pixPositions[index].first*imgs[index]->nChannels);
 		alg::vec3 column(color[0]/255.f, color[1]/255.f, color[2]/255.f);
 		//strict weak ordering => greatest first, so take reciprocal
-		queue.push(std::make_pair(1.0/((column-mean).length()+0.0001), i));
+		queue.push(std::make_pair(1.0 / ((column - mean).length() + 0.0001), index));
 	}
 	alg::vec3 minColor(255,255,255);
 	alg::vec3 maxColor(0,0,0);

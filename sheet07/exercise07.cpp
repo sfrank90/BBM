@@ -203,6 +203,242 @@ void applySpaceCarving(
 		}
 	}
 
+	std::cout << "Pos. Z:\n"
+		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+	imgRemoval = 0;
+	silRemoval = 0;
+	colRemoval = 0;
+
+
+	// iterate in negative z direction
+	for (int z = gridRes - 1; z >= 0; --z){
+		for (int y = 0; y<gridRes; ++y){
+			for (int x = 0; x<gridRes; ++x){
+				alg::vec4 pos(-0.5f + x*step,
+					-0.5f + y*step,
+					-0.5f + z*step,
+					1.0f);
+
+				alg::vec3 col(0.0, 0.0, 0.0);
+
+				for (int i = 0; i<numInput; ++i){
+					alg::vec4 tpos = textureMatrices.at(i) * pos;
+
+					// homogenize //
+					alg::vec2 imgPos(tpos[0] / tpos[3],
+						tpos[1] / tpos[3]);
+
+					// image positions //
+					int xImg = round(imgPos[0]);
+					int yImg = round(imgPos[1]);
+
+					pixPositions.at(i) = std::make_pair(xImg, yImg);
+				}
+
+				if (isImgConsistent(pixPositions, numInput, imgWidth, imgHeight, imgRemoval)
+					&& isSilhouetteConsistent(pixPositions, numInput, imgs, silRemoval)
+					&& isColourConsistent_plane(pos, pixPositions, campos, col, 5, colRemoval, numInput, imgs, diffThresh, step)) {
+					voxel v;
+					v.pos = pos;
+					v.col = col;
+
+					consistentVoxels.insert(v);
+				}
+			}
+		}
+	}
+
+	std::cout << "Neg. Z:\n"
+		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+	imgRemoval = 0;
+	silRemoval = 0;
+	colRemoval = 0;
+
+	// iterate in positve x direction
+	for (int x = 0; x<gridRes; ++x){
+		for (int z = 0; z<gridRes; ++z){
+			for (int y = 0; y<gridRes; ++y){
+				alg::vec4 pos(-0.5f + x*step,
+					-0.5f + y*step,
+					-0.5f + z*step,
+					1.0f);
+
+				alg::vec3 col(0.0, 0.0, 0.0);
+
+				for (int i = 0; i<numInput; ++i){
+					alg::vec4 tpos = textureMatrices.at(i) * pos;
+
+					// homogenize //
+					alg::vec2 imgPos(tpos[0] / tpos[3],
+						tpos[1] / tpos[3]);
+
+					// image positions //
+					int xImg = round(imgPos[0]);
+					int yImg = round(imgPos[1]);
+
+					pixPositions.at(i) = std::make_pair(xImg, yImg);
+				}
+
+				if (isImgConsistent(pixPositions, numInput, imgWidth, imgHeight, imgRemoval)
+					&& isSilhouetteConsistent(pixPositions, numInput, imgs, silRemoval)
+					&& isColourConsistent_plane(pos, pixPositions, campos, col, 0, colRemoval, numInput, imgs, diffThresh, step)) {
+					voxel v;
+					v.pos = pos;
+					v.col = col;
+
+					consistentVoxels.insert(v);
+				}
+			}
+		}
+	}
+
+	std::cout << "Pos. X:\n"
+		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+	imgRemoval = 0;
+	silRemoval = 0;
+	colRemoval = 0;
+
+	// iterate in negative x direction
+	for (int x = gridRes - 1; x >= 0; --x){
+		for (int z = 0; z<gridRes; ++z){
+			for (int y = 0; y<gridRes; ++y){
+				alg::vec4 pos(-0.5f + x*step,
+					-0.5f + y*step,
+					-0.5f + z*step,
+					1.0f);
+
+				alg::vec3 col(0.0, 0.0, 0.0);
+
+				for (int i = 0; i<numInput; ++i){
+					alg::vec4 tpos = textureMatrices.at(i) * pos;
+
+					// homogenize //
+					alg::vec2 imgPos(tpos[0] / tpos[3],
+						tpos[1] / tpos[3]);
+
+					// image positions //
+					int xImg = round(imgPos[0]);
+					int yImg = round(imgPos[1]);
+
+					pixPositions.at(i) = std::make_pair(xImg, yImg);
+				}
+
+				if (isImgConsistent(pixPositions, numInput, imgWidth, imgHeight, imgRemoval)
+					&& isSilhouetteConsistent(pixPositions, numInput, imgs, silRemoval)
+					&& isColourConsistent_plane(pos, pixPositions, campos, col, 1, colRemoval, numInput, imgs, diffThresh, step)) {
+					voxel v;
+					v.pos = pos;
+					v.col = col;
+
+					consistentVoxels.insert(v);
+				}
+			}
+		}
+	}
+
+	std::cout << "Neg. X:\n"
+		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+	imgRemoval = 0;
+	silRemoval = 0;
+	colRemoval = 0;
+
+
+	// iterate in positive y direction
+	for (int y = 0; y<gridRes; ++y){
+		for (int z = 0; z<gridRes; ++z){
+			for (int x = 0; x<gridRes; ++x){
+				alg::vec4 pos(-0.5f + x*step,
+					-0.5f + y*step,
+					-0.5f + z*step,
+					1.0f);
+
+				alg::vec3 col(0.0, 0.0, 0.0);
+
+				for (int i = 0; i<numInput; ++i){
+					alg::vec4 tpos = textureMatrices.at(i) * pos;
+
+					// homogenize //
+					alg::vec2 imgPos(tpos[0] / tpos[3],
+						tpos[1] / tpos[3]);
+
+					// image positions //
+					int xImg = round(imgPos[0]);
+					int yImg = round(imgPos[1]);
+
+					pixPositions.at(i) = std::make_pair(xImg, yImg);
+				}
+
+				if (isImgConsistent(pixPositions, numInput, imgWidth, imgHeight, imgRemoval)
+					&& isSilhouetteConsistent(pixPositions, numInput, imgs, silRemoval)
+					&& isColourConsistent_plane(pos, pixPositions, campos, col, 2, colRemoval, numInput, imgs, diffThresh, step)) {
+					voxel v;
+					v.pos = pos;
+					v.col = col;
+
+					consistentVoxels.insert(v);
+				}
+			}
+		}
+	}
+
+	std::cout << "Pos. Y:\n"
+		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+	imgRemoval = 0;
+	silRemoval = 0;
+	colRemoval = 0;
+
+	// iterate in negative y direction
+	for (int y = gridRes - 1; y >= 0; --y){
+		for (int z = 0; z<gridRes; ++z){
+			for (int x = 0; x<gridRes; ++x){
+				alg::vec4 pos(-0.5f + x*step,
+					-0.5f + y*step,
+					-0.5f + z*step,
+					1.0f);
+
+				alg::vec3 col(0.0, 0.0, 0.0);
+
+				for (int i = 0; i<numInput; ++i){
+					alg::vec4 tpos = textureMatrices.at(i) * pos;
+
+					// homogenize //
+					alg::vec2 imgPos(tpos[0] / tpos[3],
+						tpos[1] / tpos[3]);
+
+					// image positions //
+					int xImg = round(imgPos[0]);
+					int yImg = round(imgPos[1]);
+
+					pixPositions.at(i) = std::make_pair(xImg, yImg);
+				}
+
+				if (isImgConsistent(pixPositions, numInput, imgWidth, imgHeight, imgRemoval)
+					&& isSilhouetteConsistent(pixPositions, numInput, imgs, silRemoval)
+					&& isColourConsistent_plane(pos, pixPositions, campos, col, 3, colRemoval, numInput, imgs, diffThresh, step)) {
+					voxel v;
+					v.pos = pos;
+					v.col = col;
+
+					consistentVoxels.insert(v);
+				}
+			}
+		}
+	}
+
+	std::cout << "Neg. Y:\n"
+		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
+		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 
 	// remove doubled elements //
 	for(std::set<voxel>::iterator iter = consistentVoxels.begin();
@@ -305,45 +541,53 @@ bool isColourConsistent_plane(
 	const alg::vec3 voxPos = alg::vec3(voxPosition[0], voxPosition[1], voxPosition[2]);
 
 /* TODO */
+	std::vector<int> camIdx;
+	camIdx.reserve(numInput);
+	for (int i = 0; i<numInput; ++i){
+		alg::vec3 cam = camPos[i];
+
+		switch (axis){
+		case 0: // x pos
+			if (voxPos[0] > cam[0]){ camIdx.push_back(i); }
+			break;
+		case 1: // x neg
+			if (voxPos[0] < cam[0]){ camIdx.push_back(i); }
+			break;
+		case 2: // y pos
+			if (voxPos[1] > cam[1]){ camIdx.push_back(i); }
+			break;
+		case 3: // y neg
+			if (voxPos[1] < cam[1]){ camIdx.push_back(i); }
+			break;
+		case 4: // z pos
+			if (voxPos[2] > cam[2]){ camIdx.push_back(i); }
+			break;
+		case 5: // z neg
+			if (voxPos[2] < cam[2]){ camIdx.push_back(i); }
+			break;
+		default:
+			break;
+		}
+	}
+	if (camIdx.size() == 0){
+		++colRemoval;
+		return false;
+	}
+
 	//paarweiser vergleich
 	unsigned int colorAcc[3] = {0,0,0};
-	// color to voxel
-    //for (int i=0;i<numInput;i++){
-    //    unsigned char* oColor = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
-    //    for(int t=i+1;t<numInput;t++){
-    //        unsigned char* tColor = ((unsigned char*)(imgs[t]->imageData + imgs[t]->widthStep*pixPositions[t].second) + pixPositions[t].first*imgs[t]->nChannels);
-    //        //std::cout << diffThresh << std::endl;
-    //        if (std::max(oColor[0],tColor[0])-std::min(oColor[0],tColor[0])>diffThresh
-    //            || std::max(oColor[1],tColor[1])-std::min(oColor[1],tColor[1])>diffThresh
-    //            || std::max(oColor[2],tColor[2])-std::min(oColor[2],tColor[2])>diffThresh){
-    //            colRemoval = t;
-    //            return false;
-    //        }
-    //    }
-    //    colorAcc[0]+=oColor[0];
-    //    colorAcc[1]+=oColor[1];
-    //    colorAcc[2]+=oColor[2];
-    //}
-    //colorAcc[0]/=numInput;
-    //colorAcc[1]/=numInput;
-    //colorAcc[2]/=numInput;
 
-    //outputColour[0]=colorAcc[0]/255.0f;
-    //outputColour[1]=colorAcc[1]/255.0f;
-    //outputColour[2]=colorAcc[2]/255.0f;
-
-	//
 	std::priority_queue<std::pair<float, int> > queue;
 	alg::vec3 mean(0.0, 0.0, 0.0);
 
-	for (int i=0;i<numInput;i++){
+	for (int i = 0; i<camIdx.size(); i++){
 		unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
 		mean[0] += color[0]/255.f;
 		mean[1] += color[1]/255.f;
 		mean[2] += color[2]/255.f;
 	}
-	mean /= numInput;
-	for (int i=0;i<numInput;i++){
+	mean /= camIdx.size();
+	for (int i = 0; i<camIdx.size(); i++){
 		unsigned char* color = ((unsigned char*)(imgs[i]->imageData + imgs[i]->widthStep*pixPositions[i].second) + pixPositions[i].first*imgs[i]->nChannels);
 		alg::vec3 column(color[0]/255.f, color[1]/255.f, color[2]/255.f);
 		//strict weak ordering => greatest first, so take reciprocal

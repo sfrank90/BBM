@@ -627,13 +627,13 @@ bool isColourConsistent_plane(
 	}
 
 
-	colorAcc[0] /= numInput;
-	colorAcc[1] /= numInput;
-	colorAcc[2] /= numInput;
+	colorAcc[0] /= (float)numIters;
+	colorAcc[1] /= (float)numIters;
+	colorAcc[2] /= (float)numIters;
 
-	outputColour[0] = colorAcc[0] / 255.0f;
-	outputColour[1] = colorAcc[1] / 255.0f;
-	outputColour[2] = colorAcc[2] / 255.0f;
+	outputColour[0] = colorAcc[0]/255.f;
+	outputColour[1] = colorAcc[1]/255.f;
+	outputColour[2] = colorAcc[2]/255.f;
 
 	return true;
 }

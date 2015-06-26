@@ -153,15 +153,11 @@ void applySpaceCarving(
 	int imgRemoval = 0;
 	int silRemoval = 0;
 	int colRemoval = 0;
-
 	std::set<voxel> consistentVoxels;
-
 
 	// the midpoints range from [-0.5, -0.5, -0.5] to [0.5, 0.5, 0.5]
 	float step = 1.0f / (gridRes-1);
-
 	std::vector<pixPos> pixPositions;
-
 	pixPositions.resize(numInput);
 
 
@@ -170,24 +166,16 @@ void applySpaceCarving(
 	for (int z = 0; z<gridRes; ++z){
 		for (int y = 0; y<gridRes; ++y){
 			for (int x = 0; x<gridRes; ++x){
-				alg::vec4 pos(-0.5f + x*step,
-					-0.5f + y*step,
-					-0.5f + z*step,
-					1.0f);
-
+				alg::vec4 pos(-0.5f + x*step,-0.5f + y*step,-0.5f + z*step,	1.0f);
 				alg::vec3 col(0.0, 0.0, 0.0);
 
 				for (int i = 0; i<numInput; ++i){
 					alg::vec4 tpos = textureMatrices.at(i) * pos;
-
-					// homogenize //
-					alg::vec2 imgPos(tpos[0] / tpos[3],
-						tpos[1] / tpos[3]);
+					alg::vec2 imgPos(tpos[0] / tpos[3],	tpos[1] / tpos[3]);//homogenisieren
 
 					// image positions //
 					int xImg = round(imgPos[0]);
 					int yImg = round(imgPos[1]);
-
 					pixPositions.at(i) = std::make_pair(xImg, yImg);
 				}
 
@@ -204,33 +192,23 @@ void applySpaceCarving(
 	}
 
 	std::cout << "Pos. Z:\n"
-		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+		<< "Voxels removed (frustum/silhouette/color/total):    " << imgRemoval << " / " << silRemoval << " / " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in negative z direction
 	for (int z = gridRes - 1; z >= 0; --z){
 		for (int y = 0; y<gridRes; ++y){
 			for (int x = 0; x<gridRes; ++x){
-				alg::vec4 pos(-0.5f + x*step,
-					-0.5f + y*step,
-					-0.5f + z*step,
-					1.0f);
-
+				alg::vec4 pos(-0.5f + x*step,-0.5f + y*step,-0.5f + z*step,	1.0f);
 				alg::vec3 col(0.0, 0.0, 0.0);
 
 				for (int i = 0; i<numInput; ++i){
 					alg::vec4 tpos = textureMatrices.at(i) * pos;
-
-					// homogenize //
-					alg::vec2 imgPos(tpos[0] / tpos[3],
-						tpos[1] / tpos[3]);
+					alg::vec2 imgPos(tpos[0] / tpos[3],	tpos[1] / tpos[3]);//homogenisieren
 
 					// image positions //
 					int xImg = round(imgPos[0]);
 					int yImg = round(imgPos[1]);
-
 					pixPositions.at(i) = std::make_pair(xImg, yImg);
 				}
 
@@ -240,7 +218,6 @@ void applySpaceCarving(
 					voxel v;
 					v.pos = pos;
 					v.col = col;
-
 					consistentVoxels.insert(v);
 				}
 			}
@@ -248,33 +225,23 @@ void applySpaceCarving(
 	}
 
 	std::cout << "Neg. Z:\n"
-		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+		<< "Voxels removed (frustum/silhouette/color/total):    " << imgRemoval << " / " << silRemoval << " / " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in positve x direction
 	for (int x = 0; x<gridRes; ++x){
 		for (int z = 0; z<gridRes; ++z){
 			for (int y = 0; y<gridRes; ++y){
-				alg::vec4 pos(-0.5f + x*step,
-					-0.5f + y*step,
-					-0.5f + z*step,
-					1.0f);
-
+				alg::vec4 pos(-0.5f + x*step,-0.5f + y*step,-0.5f + z*step,	1.0f);
 				alg::vec3 col(0.0, 0.0, 0.0);
 
 				for (int i = 0; i<numInput; ++i){
 					alg::vec4 tpos = textureMatrices.at(i) * pos;
-
-					// homogenize //
-					alg::vec2 imgPos(tpos[0] / tpos[3],
-						tpos[1] / tpos[3]);
+					alg::vec2 imgPos(tpos[0] / tpos[3],	tpos[1] / tpos[3]);//homogenisieren
 
 					// image positions //
 					int xImg = round(imgPos[0]);
 					int yImg = round(imgPos[1]);
-
 					pixPositions.at(i) = std::make_pair(xImg, yImg);
 				}
 
@@ -284,7 +251,6 @@ void applySpaceCarving(
 					voxel v;
 					v.pos = pos;
 					v.col = col;
-
 					consistentVoxels.insert(v);
 				}
 			}
@@ -292,33 +258,23 @@ void applySpaceCarving(
 	}
 
 	std::cout << "Pos. X:\n"
-		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+		<< "Voxels removed (frustum/silhouette/color/total):    " << imgRemoval << " / " << silRemoval << " / " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in negative x direction
 	for (int x = gridRes - 1; x >= 0; --x){
 		for (int z = 0; z<gridRes; ++z){
 			for (int y = 0; y<gridRes; ++y){
-				alg::vec4 pos(-0.5f + x*step,
-					-0.5f + y*step,
-					-0.5f + z*step,
-					1.0f);
-
+				alg::vec4 pos(-0.5f + x*step,-0.5f + y*step,-0.5f + z*step,1.0f);
 				alg::vec3 col(0.0, 0.0, 0.0);
 
 				for (int i = 0; i<numInput; ++i){
 					alg::vec4 tpos = textureMatrices.at(i) * pos;
-
-					// homogenize //
-					alg::vec2 imgPos(tpos[0] / tpos[3],
-						tpos[1] / tpos[3]);
+					alg::vec2 imgPos(tpos[0] / tpos[3],	tpos[1] / tpos[3]);//homogenisieren
 
 					// image positions //
 					int xImg = round(imgPos[0]);
 					int yImg = round(imgPos[1]);
-
 					pixPositions.at(i) = std::make_pair(xImg, yImg);
 				}
 
@@ -328,7 +284,6 @@ void applySpaceCarving(
 					voxel v;
 					v.pos = pos;
 					v.col = col;
-
 					consistentVoxels.insert(v);
 				}
 			}
@@ -336,33 +291,23 @@ void applySpaceCarving(
 	}
 
 	std::cout << "Neg. X:\n"
-		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+		<< "Voxels removed (frustum/silhouette/color/total):    " << imgRemoval << " / " << silRemoval << " / " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in positive y direction
 	for (int y = 0; y<gridRes; ++y){
 		for (int z = 0; z<gridRes; ++z){
 			for (int x = 0; x<gridRes; ++x){
-				alg::vec4 pos(-0.5f + x*step,
-					-0.5f + y*step,
-					-0.5f + z*step,
-					1.0f);
-
+				alg::vec4 pos(-0.5f + x*step,-0.5f + y*step,-0.5f + z*step,1.0f);
 				alg::vec3 col(0.0, 0.0, 0.0);
 
 				for (int i = 0; i<numInput; ++i){
 					alg::vec4 tpos = textureMatrices.at(i) * pos;
-
-					// homogenize //
-					alg::vec2 imgPos(tpos[0] / tpos[3],
-						tpos[1] / tpos[3]);
+					alg::vec2 imgPos(tpos[0] / tpos[3],	tpos[1] / tpos[3]);//homogenisieren
 
 					// image positions //
 					int xImg = round(imgPos[0]);
 					int yImg = round(imgPos[1]);
-
 					pixPositions.at(i) = std::make_pair(xImg, yImg);
 				}
 
@@ -372,7 +317,6 @@ void applySpaceCarving(
 					voxel v;
 					v.pos = pos;
 					v.col = col;
-
 					consistentVoxels.insert(v);
 				}
 			}
@@ -380,33 +324,24 @@ void applySpaceCarving(
 	}
 
 	std::cout << "Pos. Y:\n"
-		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+		<< "Voxels removed (frustum/silhouette/color/total):    " << imgRemoval << " / " << silRemoval << " / " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 	imgRemoval = silRemoval = colRemoval = 0;
 
 	// iterate in negative y direction
 	for (int y = gridRes - 1; y >= 0; --y){
 		for (int z = 0; z<gridRes; ++z){
 			for (int x = 0; x<gridRes; ++x){
-				alg::vec4 pos(-0.5f + x*step,
-					-0.5f + y*step,
-					-0.5f + z*step,
-					1.0f);
-
+				alg::vec4 pos(-0.5f + x*step,-0.5f + y*step,0.5f + z*step,1.0f);
 				alg::vec3 col(0.0, 0.0, 0.0);
 
 				for (int i = 0; i<numInput; ++i){
 					alg::vec4 tpos = textureMatrices.at(i) * pos;
 
-					// homogenize //
-					alg::vec2 imgPos(tpos[0] / tpos[3],
-						tpos[1] / tpos[3]);
+					alg::vec2 imgPos(tpos[0] / tpos[3],	tpos[1] / tpos[3]); //homogenisieren
 
 					// image positions //
 					int xImg = round(imgPos[0]);
 					int yImg = round(imgPos[1]);
-
 					pixPositions.at(i) = std::make_pair(xImg, yImg);
 				}
 
@@ -416,7 +351,6 @@ void applySpaceCarving(
 					voxel v;
 					v.pos = pos;
 					v.col = col;
-
 					consistentVoxels.insert(v);
 				}
 			}
@@ -424,9 +358,7 @@ void applySpaceCarving(
 	}
 
 	std::cout << "Neg. Y:\n"
-		<< "Voxels removed (frustum):    " << imgRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (silhouette): " << silRemoval << " / " << gridRes*gridRes*gridRes << std::endl
-		<< "Voxels removed (color):      " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
+		<< "Voxels removed (frustum/silhouette/color/total):    " << imgRemoval << " / " << silRemoval << " / " << colRemoval << " / " << gridRes*gridRes*gridRes << std::endl;
 
 	// remove doubled elements //
 	for(std::set<voxel>::iterator iter = consistentVoxels.begin();

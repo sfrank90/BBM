@@ -633,9 +633,9 @@ bool isColourConsistent_plane(
 	colorAcc[2] /= (float)numIters;
 
 
-	outputColour[0] = colorAcc[0]/255.f;
+	outputColour[2] = colorAcc[0]/255.f;
 	outputColour[1] = colorAcc[1]/255.f;
-	outputColour[2] = colorAcc[2]/255.f;
+	outputColour[0] = colorAcc[2]/255.f;
 
 	return true;
 }

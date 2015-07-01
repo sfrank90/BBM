@@ -111,11 +111,23 @@ std::pair<CvPoint, CvPoint> find_line(IplImage *bimg) {
 	 */
 
 /* TODO */
+	cv::Mat mat_bimg = cv::Mat(bimg);
+	std::pair<cv::Point, cv::Point> result;
 
+	cv::vector<cv::Vec4i> lines;
+	cv::HoughLinesP(mat_bimg, lines, 1, CV_PI / 180, 80, 30, 10);
+	if (!lines.empty())
+	{
+		cv::Vec4i points = lines[0];
+		result.first = cv::Point(points[0], points[1]);
+		result.second = cv::Point(points[2], points[3]);
+	}
+
+	return result;
 }
 
 int main(int argc, char** argv) {
-	if (argc < 3 or argc > 4) {
+	if (argc < 3 || argc > 4) {
 		std::cerr << "Usage: " << argv[0] << " infile.avi outfile.asc [frame_index_skip=1]" << std::endl;
 		return 1;
 	}
@@ -141,7 +153,9 @@ int main(int argc, char** argv) {
 		 */
 
 /* TODO */
-
+		double threshold = 20.0;
+		IplImage* bimg = cvCreateImage(cvGetSize(img), 8, 1);
+		cvThreshold(gimg, bimg, threshold, 255, CV_THRESH_BINARY);
 
 		/**
 		 * - Finde die Kalibrierlinie im linken Bild. Berechne die
@@ -149,7 +163,7 @@ int main(int argc, char** argv) {
 		 */
 
 /* TODO */
-
+		std::pair<CvPoint, CvPoint> l = find_line(bimg);
 
 		/**
 		 * - Finde die Kalibrierlinie im rechten Bild. Berechne die

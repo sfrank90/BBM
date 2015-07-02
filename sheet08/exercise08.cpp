@@ -132,6 +132,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+    std::vector<CvPoint3D32f> points;
 	CvCapture *capture = cvCaptureFromFile(argv[1]);
 	std::ofstream outfile(argv[2]);
 	int frame_index_skip = argc > 3 ? atoi(argv[3]) : 1;
@@ -145,7 +146,8 @@ int main(int argc, char** argv) {
 		if (frame_index % frame_index_skip != 0) continue;
 		std::cout << "processing frame " << frame_index << std::endl;
 		IplImage *img = cvRetrieveFrame(capture);
-		IplImage *gimg = cvCreateImage(cvGetSize(img), 8, 1);
+        cv::Size size = cv::Mat(img).size();
+		IplImage *gimg = cvCreateImage(size, 8, 1);
 		cvSplit(img, gimg, NULL, NULL, NULL);
 
 		/**
@@ -154,8 +156,14 @@ int main(int argc, char** argv) {
 
 /* TODO */
 		double threshold = 20.0;
-		IplImage* bimg = cvCreateImage(cvGetSize(img), 8, 1);
+		IplImage* bimg = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 1);
 		cvThreshold(gimg, bimg, threshold, 255, CV_THRESH_BINARY);
+        cv::Mat bimg_(bimg);
+        cv::Mat left_bimg = bimg_(cv::Rect(0, 0, size.width / 2, size.height));
+        cv::Mat right_bimg = bimg_(cv::Rect(size.width / 2,
+                                            0,
+                                            size.width / 2,
+                                            size.height));
 
 		/**
 		 * - Finde die Kalibrierlinie im linken Bild. Berechne die
@@ -163,8 +171,25 @@ int main(int argc, char** argv) {
 		 */
 
 /* TODO */
-		std::pair<CvPoint, CvPoint> l = find_line(bimg);
+        /**
+         * since we assume orthographic projection, the distance to the
+         * the scene is arbitrarily offset but since we need a base, we set
+         * it here
+         */
+        float distance = 0.f;
 
+        IplImage img_ = left_bimg;
+		std::pair<CvPoint, CvPoint> l = find_line(&img_);
+
+        std::pair<CvPoint3D32f, CvPoint3D32f> right_line3d, left_line3d;
+        float x_1 = l.first.x, y_1 = l.first.y, z = distance + x_1 / size.width;
+        left_line3d.first = CvPoint3D32f{x_1 / size.width, y_1 / size.height, z};
+
+        float x_2 = l.second.x, y_2 = l.second.y; z = distance + x_2 / size.width;
+        left_line3d.second = CvPoint3D32f{x_2 / size.width, y_2 / size.height, z};
+
+        float slope_left = (y_2 - y_1) / (x_2 - x_1);
+        float b_left = y_2  - slope_left * x_2;
 		/**
 		 * - Finde die Kalibrierlinie im rechten Bild. Berechne die
 		 *   $z$-Koordinaten gemäß deiner theoretischen Überlegungen. Beachte
@@ -173,7 +198,25 @@ int main(int argc, char** argv) {
 		 */
 
 /* TODO */
+        img_ = right_bimg;
+		std::pair<CvPoint, CvPoint> r = find_line(&img_);
 
+        x_1 = r.first.x; y_1 = r.first.y, z = x_1 / size.width + distance;
+        right_line3d.first = CvPoint3D32f{x_1 / size.width, y_2 / size.height, z};
+
+        x_2 = r.second.x; y_2 = r.second.y; z = distance + x_2 / size.width;
+        right_line3d.second = CvPoint3D32f{x_2 / size.width, y_2 / size.height, z};
+
+        float slope_right = (y_2 - y_1) / (x_2 - x_1);
+        float b_right = y_2  - slope_right * x_2;
+
+        //find center point of lines in 2d
+        float cx = (b_right - b_left) / (slope_left - slope_right);
+        float cy = cx * slope_right + b_right;
+
+        CvPoint3D32f center{cx / size.width,
+                            cy / size.height,
+                cx / size.width + distance};
 
 		/**
 		 * - Finde eine Ebene, die durch beide Kalibrierlinien geht. Für jeden
@@ -182,6 +225,13 @@ int main(int argc, char** argv) {
 		 */
 
 /* TODO */
+
+        CvPoint3D32f u = left_line3d.first - left_line3d.second;
+        u = normalized(u);
+        CvPoint3D32f v = right_line3d.first - right_line3d.second;
+        v = normalized(v);
+        CvPoint3D32f n = cross(u, v);
+        n = normalized(n);
 
 
 		/**
@@ -195,6 +245,23 @@ int main(int argc, char** argv) {
 		 */
 
 /* TODO */
+
+        //intersect pixel ray and plane for each pixel
+        CvPoint3D32f ray_dir{0, 0, 1};
+        for(int x = 0; x < bimg_.cols; ++x) {
+            for(int y = 0; y < bimg_.rows; ++y) {
+                if (bimg_.at<char>(x, y) >= 100) {
+                    float px = (float)x / bimg_.cols;
+                    float py = (float)y / bimg_.rows;
+                    CvPoint3D32f ray_origin {px, py, 0};
+                    float z = dot(center - ray_origin, n) / dot(ray_dir, n);
+                    outfile << px << "," << py << "," << z;
+                    std::cout << px << "," << py << "," << z << std::endl;
+                    if(y < bimg_.cols - 1)
+                        outfile << "\n";
+                }
+            }
+        }
 
 
 		cvReleaseImage(&bimg);

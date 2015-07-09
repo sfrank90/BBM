@@ -46,29 +46,42 @@ IplImage *compute_normals(const std::vector<IplImage *> &images,
                                       IPL_DEPTH_32F, 3);
     cv::Mat n(normals);
 
-    int cols = images.size();
+    int rows = images.size();
 
     for(int y = 0; y < images[0]->height; ++y) {
         for(int x = 0; x < images[0]->width; ++x) {
-            cv::Mat light_mat(cols, 3, CV_32FC1);
-            cv::Mat intensity_mat(cols, 1, CV_32FC1);
+            cv::Mat light_mat(rows, 3, CV_32FC1);
+            cv::Mat intensity_mat(rows, 1, CV_32FC1);
+
             for(int i = 0; i < images.size(); ++i) {
                 cv::Mat img = images[i];
-                intensity_mat.at<float>(i) = img.at<float>(y, x);
+                int intensity_char = img.at<unsigned char>(y, x);
+                float intensity = intensity_char / 255.0;
 
-                light_mat.at<float>(0, i) = lights[i].x;
-                light_mat.at<float>(1, i) = lights[i].y;
-                light_mat.at<float>(2, i) = lights[i].z;
+                intensity_mat.at<float>(i) = intensity;
+
+                light_mat.at<float>(i, 0) = lights[i].x;
+                light_mat.at<float>(i, 1) = lights[i].y;
+                light_mat.at<float>(i, 2) = lights[i].z;
             }
 
-            cv::Mat np(3, 1, CV_32FC1);
+            cv::Mat np(3, 1, CV_32FC1, cv::Scalar(0));
             cv::solve(light_mat, intensity_mat, np, cv::DECOMP_SVD);
 
-            n.at<cv::Vec3f>(y, x) = np;
+            normalize(np, np);
+            cv::Vec3f nvec(np);
+
+            //std::cout << nvec << std::endl;
+            n.at<cv::Vec3f>(y, x) = nvec;
         }
     }
 
     cv::namedWindow("normals", CV_WINDOW_AUTOSIZE);
+    //cv::Mat channels[3];
+    //cv::split(n, channels);
+    //cv::Mat neworder[] = {channels[2], channels[0], channels[1]};
+
+    //cv::merge(neworder, 3, n);
     cv::imshow("normals", n);
     cv::waitKey(0);
 
@@ -103,6 +116,40 @@ IplImage *compute_normals(const std::vector<IplImage *> &images,
 IplImage *integrate_normals(IplImage *normals, int num_steps=100) {
     IplImage *heights = cvCreateImage(cvSize(normals->width, normals->height), IPL_DEPTH_32F, 1);
 	cvSet(heights, cvScalar(0));
+
+    cv::Mat h(heights);
+    cv::Mat nor(normals);
+
+    for (int i = 0; i < num_steps; ++i) {
+        cv::Mat newh = cv::Mat(h.rows, h.cols, CV_32FC1, cv::Scalar(0, 0, 0));
+        for (int y = 1; y < h.rows - 2; ++y) {
+            for (int x = 1; x < h.cols - 2; ++x) {
+                cv::Vec3f n = nor.at<cv::Vec3f>(y, x);
+                float nxz = n[0] / n[2];
+                float nyz = n[1] / n[2];
+                nxz = std::isnan(nxz) ? 0 : nxz;
+                nyz = std::isnan(nyz) ? 0 : nyz;
+                nxz = std::isinf(nxz) ? 0 : nxz;
+                nyz = std::isinf(nyz) ? 0 : nyz;
+                float z = h.at<float>(y, x);
+                float z_right = h.at<float>(y, x + 1);
+                float z_top = h.at<float>(y + 1, x);
+
+                newh.at<float>(y, x) += z_right - nxz;
+                newh.at<float>(y, x) += z_top - nyz;
+                newh.at<float>(y, x + 1) += nxz + z;
+                newh.at<float>(y + 1, x) += nyz + z;
+            }
+        }
+
+        for (int y = 0; y < h.rows; ++y) {
+            for (int x = 0; x < h.cols; ++x) {
+                h.at<float>(y, x) = newh.at<float>(y, x) / 4;
+            }
+        }
+    }
+
+    std::cout << h << std::endl;
 
 /* TODO */
 
@@ -143,7 +190,7 @@ int main(int argc, const char *argv[]) {
     std::vector<CvPoint3D32f> lights;
     for (int i = 1; i < argc; ++i) {
         IplImage *image = cvLoadImage(argv[i]);
-        IplImage *gimage = cvCreateImage(cvSize(image->width, image->height), 8, 1);
+        IplImage *gimage = cvCreateImage(cvSize(image->width, image->height), IPL_DEPTH_8U, 1);
         cvCvtColor(image, gimage, CV_RGB2GRAY);
         cvReleaseImage(&image);
         images.push_back(gimage);
